@@ -36,6 +36,7 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
   const [showContent, setShowContent] = useState(false);
   const [envelopeOpen, setEnvelopeOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const weddingDate = new Date(wedding.wedding_date);
 
   const monthName = weddingDate.toLocaleString('en-US', { month: 'long' });
@@ -301,9 +302,34 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
           <h2 className={`text-6xl sm:text-8xl tracking-widest font-black drop-shadow-sm mb-12 ${theme.fontTitle}`}>
             {wedding.partner_one} <span className="text-5xl">&</span> {wedding.partner_two}
           </h2>
-          <p className={`text-sm tracking-[0.2em] uppercase opacity-60 ${theme.fontBody}`}>
+          <p className={`text-sm tracking-[0.2em] uppercase opacity-60 mb-12 ${theme.fontBody}`}>
             {weddingDate.toLocaleDateString('en-GB').replace(/\//g, ' • ')} — {wedding.location}
           </p>
+
+          <button 
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className={`px-8 py-3 rounded-full border border-current hover:opacity-70 transition-opacity tracking-[0.1em] uppercase text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 mx-auto ${theme.fontBody}`}
+          >
+            {copied ? (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Link Copied!
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Share Invitation
+              </>
+            )}
+          </button>
         </motion.div>
       </section>
           </motion.main>
