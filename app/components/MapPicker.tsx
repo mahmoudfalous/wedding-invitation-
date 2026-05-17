@@ -24,7 +24,12 @@ interface MapPickerProps {
 function SearchField() {
   const map = useMap();
   useEffect(() => {
-    const provider = new OpenStreetMapProvider();
+    const provider = new OpenStreetMapProvider({
+      params: {
+        'accept-language': 'ar,en',
+        addressdetails: 1,
+      }
+    });
     const searchControl = new (GeoSearchControl as any)({
       provider: provider,
       style: 'bar',

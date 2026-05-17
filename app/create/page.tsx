@@ -262,33 +262,41 @@ export default function CreateWedding() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-[#8a6b52] ml-1">Location Map (Optional)</label>
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsMapModalOpen(true)}
-                    className="flex-1 py-3 px-4 rounded-xl border-2 border-dashed border-[#e4a6a1] text-[#8a4b3b] hover:bg-[#fcf9f6] transition-colors flex items-center justify-center gap-2 font-medium"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    {formData.locationUrl ? 'Change Pinned Location' : 'Open Map to Pin Location'}
-                  </button>
-                  {formData.locationUrl && (
+                <label className="text-[10px] uppercase tracking-widest font-bold text-[#8a6b52] ml-1">Location Map Link (Optional)</label>
+                <div className="flex flex-col gap-3">
+                  <input
+                    type="url"
+                    placeholder="Paste Google Maps link here..."
+                    className="w-full border-b-2 border-[#f0e4dc] focus:border-[#e4a6a1] bg-transparent p-3 outline-none transition-all placeholder:text-stone-300 text-sm"
+                    value={formData.locationUrl}
+                    onChange={(e) => setFormData({ ...formData, locationUrl: e.target.value })}
+                  />
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-stone-200"></div>
+                    <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">OR</span>
+                    <div className="h-px flex-1 bg-stone-200"></div>
+                  </div>
+                  <div className="flex items-center gap-4">
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, locationUrl: '' })}
-                      className="p-3 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 transition-colors"
-                      title="Remove Pin"
+                      onClick={() => setIsMapModalOpen(true)}
+                      className="flex-1 py-3 px-4 rounded-xl border-2 border-dashed border-[#e4a6a1] text-[#8a4b3b] hover:bg-[#fcf9f6] transition-colors flex items-center justify-center gap-2 font-medium"
                     >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      Open Map to Pin Location
                     </button>
-                  )}
+                    {formData.locationUrl && formData.locationUrl.includes('query=') && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, locationUrl: '' })}
+                        className="p-3 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 transition-colors"
+                        title="Remove Pin"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {formData.locationUrl && (
-                  <p className="text-xs text-emerald-600 ml-1 font-medium flex items-center gap-1 mt-2">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                    Location pinned successfully
-                  </p>
-                )}
               </div>
             </motion.div>
 

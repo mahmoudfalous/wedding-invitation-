@@ -325,14 +325,22 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
             </div>
           )}
 
-          <div className="w-full aspect-[4/3] sm:aspect-video rounded-3xl overflow-hidden shadow-2xl relative">
-            <motion.img 
-              style={{ scale: scaleImage }}
-              src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=2070&auto=format&fit=crop" 
-              alt="Venue" 
-              className="w-full h-full object-cover grayscale-[30%] origin-bottom" 
-            />
-            <div className={`absolute inset-0 ${theme.bg} mix-blend-overlay opacity-30`}></div>
+          <div className="w-full aspect-[4/3] sm:aspect-video rounded-3xl overflow-hidden shadow-2xl relative bg-stone-200">
+            <iframe 
+              src={(() => {
+                let q = wedding.location;
+                if (wedding.location_url && wedding.location_url.includes('query=')) {
+                  const m = wedding.location_url.match(/query=([^&]+)/);
+                  if (m && m[1]) q = m[1];
+                }
+                return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+              })()}
+              className="w-full h-full border-0 grayscale-[20%]"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+            <div className={`absolute inset-0 ${theme.bg} mix-blend-overlay opacity-30 pointer-events-none`}></div>
           </div>
         </motion.div>
       </section>
