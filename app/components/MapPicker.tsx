@@ -47,6 +47,9 @@ function SearchField({ onLocationSelect }: { onLocationSelect: (lat: number, lng
 
     const handleShowLocation = (e: any) => {
       if (e && e.location) {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
         onLocationSelect(e.location.y, e.location.x);
         map.flyTo([e.location.y, e.location.x], 15);
       }
@@ -71,6 +74,9 @@ function LocationMarker({
 }) {
   const map = useMapEvents({
     click(e: any) {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       onLocationSelect(e.latlng.lat, e.latlng.lng);
       map.flyTo(e.latlng, map.getZoom());
     }
@@ -146,12 +152,12 @@ export default function MapPicker({ onLocationSelect, onClose }: MapPickerProps)
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" style={{ height: '100dvh' }}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white w-full max-w-3xl rounded-3xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[95vh] md:h-[700px] border-2 sm:border-4 border-[#f0e4dc]"
+        className="bg-white w-full max-w-3xl rounded-none sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-full md:h-[700px] border-0 sm:border-4 border-[#f0e4dc]"
       >
         
         {/* Header */}
@@ -184,6 +190,7 @@ export default function MapPicker({ onLocationSelect, onClose }: MapPickerProps)
               overflow: hidden;
               box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
               border: 2px solid #f0e4dc;
+              background: white;
             }
             .leaflet-geosearch-bar form input {
               padding: 12px 16px;
