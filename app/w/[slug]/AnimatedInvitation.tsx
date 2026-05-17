@@ -1,7 +1,7 @@
 // app/w/[slug]/AnimatedInvitation.tsx
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { ThemeConfig } from '@/app/constants/themes';
 
@@ -79,6 +79,9 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
     }, 2800);
   };
 
+  const { scrollYProgress } = useScroll();
+  const scaleImage = useTransform(scrollYProgress, [0.5, 1], [1, 1.15]);
+
   return (
     <>
       <AnimatePresence mode="wait">
@@ -108,12 +111,16 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
                 className={`absolute inset-x-3 top-3 bottom-3 ${theme.bg} shadow-md flex flex-col items-center justify-center p-4 z-10 border ${theme.border} rounded-sm`}
               >
                 <div className={`w-10 h-10 sm:w-12 sm:h-12 mb-4 opacity-40 ${theme.accent}`}>
-                  <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                  {wedding.type === 'engagement' ? (
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>
+                  ) : (
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                  )}
                 </div>
                 <h3 className={`text-2xl sm:text-3xl italic text-center ${theme.fontTitle} mb-2`}>
                   {wedding.partner_one} & {wedding.partner_two}
                 </h3>
-                <p className={`text-[10px] sm:text-xs tracking-[0.2em] uppercase opacity-50 ${theme.fontBody}`}>Formal Invitation</p>
+                <p className={`text-[10px] sm:text-xs tracking-[0.2em] uppercase opacity-50 ${theme.fontBody}`}>Formal {wedding.type === 'engagement' ? 'Engagement' : 'Wedding'} Invitation</p>
               </motion.div>
 
               {/* Envelope Body (Bottom, Left, Right flaps) */}
@@ -148,7 +155,7 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
                     exit={{ opacity: 0, scale: 0 }}
                     className="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-40"
                   >
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-rose-800 rounded-full shadow-lg flex items-center justify-center border border-rose-950/30 ring-2 ring-rose-900/20">
+                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-lg flex items-center justify-center border ring-2 ${wedding.type === 'engagement' ? 'bg-indigo-800 border-indigo-950/30 ring-indigo-900/20' : 'bg-rose-800 border-rose-950/30 ring-rose-900/20'}`}>
                       <span className="text-white/90 font-serif italic text-2xl sm:text-3xl drop-shadow-sm">
                         {wedding.partner_one[0]}
                       </span>
@@ -187,7 +194,7 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}
           className={`text-5xl sm:text-7xl font-black ${theme.fontTitle} tracking-tight uppercase leading-none mb-12`}
         >
-          Let's Get<br/>Married
+          Let's Get<br/>{wedding.type === 'engagement' ? 'Engaged' : 'Married'}
         </motion.h1>
 
         <div className="flex justify-center gap-4 sm:gap-12 w-full mt-4">
@@ -247,7 +254,9 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
             </svg>
           </div>
           <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 ${theme.fontBody}`}>
-            Something wonderful is about to happen in our lives. We would be so happy to share this special day with the people who matter most to us — our family and dearest friends. Please join us as we celebrate the beginning of our forever.
+            {wedding.type === 'engagement'
+              ? "We are thrilled to announce our engagement! Please join us for a celebration of love, laughter, and our new chapter together. We can't wait to share this beautiful milestone with our dearest friends and family."
+              : "Something wonderful is about to happen in our lives. We would be so happy to share this special day with the people who matter most to us — our family and dearest friends. Please join us as we celebrate the beginning of our forever."}
           </p>
         </motion.div>
       </section>
@@ -261,14 +270,25 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
           <p className={`text-xl sm:text-2xl mt-4 italic ${theme.fontTitle} opacity-80`}>{yearText}</p>
           <div className={`flex justify-center items-center gap-4 sm:gap-8 my-16 text-3xl sm:text-5xl font-black ${theme.fontTitle}`}>
             {daysAround.map((d, index) => (
-              d.isTarget ? (
-                <div key="target" className="relative flex items-center justify-center scale-125 mx-2">
-                  <svg viewBox="0 0 24 24" fill="currentColor" className={`w-16 h-16 sm:w-20 sm:h-20 drop-shadow-md ${theme.accent}`}>
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                  <span className="absolute text-white mix-blend-difference text-xl sm:text-2xl z-10 font-bold">{d.dayNum}</span>
-                </div>
-              ) : ( <span key={index} className="opacity-70">{d.dayNum}</span> )
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={d.isTarget ? "relative flex items-center justify-center scale-125 mx-2" : "opacity-70"}
+              >
+                {d.isTarget ? (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="currentColor" className={`w-16 h-16 sm:w-20 sm:h-20 drop-shadow-md ${theme.accent}`}>
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <span className="absolute text-white mix-blend-difference text-xl sm:text-2xl z-10 font-bold">{d.dayNum}</span>
+                  </>
+                ) : (
+                  <span>{d.dayNum}</span>
+                )}
+              </motion.div>
             ))}
           </div>
           <p className={`text-2xl sm:text-3xl italic ${theme.fontTitle}`}>{dayName}, {monthName} {weddingDate.getDate()}, {weddingDate.getFullYear()}</p>
@@ -281,10 +301,15 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
           <h2 className={`text-5xl sm:text-7xl tracking-wide uppercase font-black mb-6 ${theme.fontTitle}`}>Location</h2>
           <p className={`text-3xl mb-6 italic ${theme.fontTitle}`}>{wedding.location}</p>
           <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 mb-10 ${theme.fontBody}`}>
-            An open-air wedding venue tucked among olive trees and warm string lights, just outside the heart of {wedding.location}.
+            An open-air {wedding.type === 'engagement' ? 'engagement' : 'wedding'} venue tucked among olive trees and warm string lights, just outside the heart of {wedding.location}.
           </p>
           <div className="w-full aspect-[4/3] sm:aspect-video rounded-3xl overflow-hidden shadow-2xl relative">
-            <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=2070&auto=format&fit=crop" alt="Venue" className="w-full h-full object-cover grayscale-[30%]" />
+            <motion.img 
+              style={{ scale: scaleImage }}
+              src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=2070&auto=format&fit=crop" 
+              alt="Venue" 
+              className="w-full h-full object-cover grayscale-[30%] origin-bottom" 
+            />
             <div className={`absolute inset-0 ${theme.bg} mix-blend-overlay opacity-30`}></div>
           </div>
         </motion.div>
@@ -330,6 +355,16 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
               </>
             )}
           </button>
+
+          <div className="mt-16 pt-8 border-t border-current border-opacity-10 max-w-xs mx-auto">
+            <p className={`text-xs uppercase tracking-widest opacity-50 mb-4 ${theme.fontBody}`}>Want an invitation like this?</p>
+            <a 
+              href="/" 
+              className={`inline-block px-8 py-3 rounded-full border border-current hover:opacity-70 transition-opacity tracking-[0.1em] uppercase text-xs sm:text-sm shadow-sm ${theme.fontBody}`}
+            >
+              Create Your Own
+            </a>
+          </div>
         </motion.div>
       </section>
           </motion.main>

@@ -63,5 +63,32 @@ export const WEDDING_THEMES: Record<string, ThemeConfig> = {
     fontBody: "font-serif",
     border: "border-[#d8d3c8]",
     cardBg: "bg-[#edeae1]"
+  },
+  coastal: {
+    bg: "bg-slate-50",
+    text: "text-slate-900",
+    accent: "text-sky-600",
+    fontTitle: "font-serif tracking-wide",
+    fontBody: "font-sans font-light",
+    border: "border-slate-200",
+    cardBg: "bg-white"
+  },
+  terracotta: {
+    bg: "bg-[#faf6f0]",
+    text: "text-[#5e3a2f]",
+    accent: "text-[#c26d53]",
+    fontTitle: "font-serif italic",
+    fontBody: "font-sans",
+    border: "border-[#e8d5c4]",
+    cardBg: "bg-[#f4ebe1]"
+  },
+  royal: {
+    bg: "bg-slate-950",
+    text: "text-amber-50",
+    accent: "text-amber-400",
+    fontTitle: "font-serif tracking-widest uppercase",
+    fontBody: "font-serif",
+    border: "border-slate-800",
+    cardBg: "bg-slate-900"
   }
 };

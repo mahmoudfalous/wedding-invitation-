@@ -17,24 +17,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { data: wedding } = await supabase
     .from('weddings')
-    .select('partner_one, partner_two, wedding_date, location, image_one_url')
+    .select('partner_one, partner_two, wedding_date, location, image_one_url, type')
     .eq('slug', resolvedParams.slug)
     .single();
 
-  if (!wedding) return { title: 'Wedding Invitation' };
+  if (!wedding) return { title: 'Invitation' };
 
   const formattedDate = new Date(wedding.wedding_date).toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric'
   });
   
   const ogImage = wedding.image_one_url || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1200&auto=format&fit=crop';
+  const eventType = wedding.type === 'engagement' ? 'Engagement' : 'Wedding';
 
   return {
-    title: `${wedding.partner_one} & ${wedding.partner_two} - Wedding Invitation`,
+    title: `${wedding.partner_one} & ${wedding.partner_two} - ${eventType} Invitation`,
     description: `Join us on ${formattedDate} in ${wedding.location} to celebrate our special day!`,
-    keywords: ['wedding', 'invitation', wedding.partner_one, wedding.partner_two, wedding.location, 'digital invitation', 'wedding website'],
+    keywords: ['wedding', 'engagement', 'invitation', wedding.partner_one, wedding.partner_two, wedding.location, 'digital invitation'],
     openGraph: {
-      title: `${wedding.partner_one} & ${wedding.partner_two} are getting married!`,
+      title: `${wedding.partner_one} & ${wedding.partner_two} are getting ${wedding.type === 'engagement' ? 'engaged' : 'married'}!`,
       description: `Join us on ${formattedDate} in ${wedding.location}. We can't wait to celebrate with you!`,
       type: 'website',
       siteName: 'ForeverInvites',
@@ -49,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${wedding.partner_one} & ${wedding.partner_two}'s Wedding`,
+      title: `${wedding.partner_one} & ${wedding.partner_two}'s ${eventType}`,
       description: `Join us on ${formattedDate} in ${wedding.location}.`,
       images: [ogImage],
     },

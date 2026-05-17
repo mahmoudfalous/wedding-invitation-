@@ -19,6 +19,7 @@ export default function CreateWedding() {
     date: '',
     location: '',
     theme: 'minimal',
+    type: 'wedding',
   });
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function CreateWedding() {
           theme: formData.theme,
           image_one_url: brideImageUrl,
           image_two_url: groomImageUrl,
+          type: formData.type,
         })
         .select('slug, edit_token')
         .single();
@@ -103,8 +105,10 @@ export default function CreateWedding() {
     visible: { opacity: 1, x: 0 }
   };
 
+  const activeTheme = WEDDING_THEMES[formData.theme] || WEDDING_THEMES.minimal;
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#fdfbf7] via-[#f7f0ea] to-[#f0e4dc] text-[#5c3a21] flex flex-col items-center justify-center p-4 md:p-8 relative selection:bg-[#e4a6a1] selection:text-white">
+    <main className={`min-h-screen ${activeTheme.bg} ${activeTheme.text} flex flex-col items-center justify-center p-4 md:p-8 relative transition-colors duration-700`}>
 
       {/* Background Decorative Sparkles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -128,13 +132,38 @@ export default function CreateWedding() {
           Go Back
         </button>
 
-        <div className="bg-white/80 backdrop-blur-lg p-8 md:p-12 rounded-[2.5rem] shadow-2xl shadow-[#5c3a21]/10 border border-white/50">
+        <div className={`${activeTheme.cardBg} backdrop-blur-lg p-8 md:p-12 rounded-[2.5rem] shadow-2xl border ${activeTheme.border} transition-colors duration-700`}>
           <div className="text-center mb-10">
             <motion.p variants={itemVariants} className="uppercase tracking-[0.3em] text-[#e4a6a1] text-[10px] font-bold mb-3">Your Journey Starts Here</motion.p>
             <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-serif font-medium text-[#5c3a21] mb-2 italic">Design Your Story</motion.h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-10">
+
+            {/* Section 0: Event Type */}
+            <motion.div variants={itemVariants} className="space-y-6">
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#eadecc]"></span>
+                <h3 className="font-serif text-lg italic text-[#8a4b3b]">The Celebration</h3>
+                <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#eadecc]"></span>
+              </div>
+              <div className="flex justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, type: 'wedding' })}
+                  className={`px-8 py-3 rounded-full border transition-all text-sm tracking-widest uppercase font-bold ${formData.type === 'wedding' ? 'bg-[#8a4b3b] text-white border-[#8a4b3b]' : 'border-[#eadecc] text-[#8a6b52] hover:border-[#8a4b3b]'}`}
+                >
+                  Wedding
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, type: 'engagement' })}
+                  className={`px-8 py-3 rounded-full border transition-all text-sm tracking-widest uppercase font-bold ${formData.type === 'engagement' ? 'bg-[#8a4b3b] text-white border-[#8a4b3b]' : 'border-[#eadecc] text-[#8a6b52] hover:border-[#8a4b3b]'}`}
+                >
+                  Engagement
+                </button>
+              </div>
+            </motion.div>
 
             {/* Section 1: Names */}
             <motion.div variants={itemVariants} className="space-y-6">
