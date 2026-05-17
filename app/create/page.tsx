@@ -7,6 +7,13 @@ import { motion, AnimatePresence } from 'framer-motion'; // Added Framer Motion
 import { WEDDING_THEMES } from "@/app/constants/themes";
 import { supabase } from "@/app/lib/supabase";
 
+const DRESS_CODES = {
+  earthTone: ['#9A6B5B', '#C89F88', '#E6D7C3', '#C79A63', '#DCC696', '#685044'],
+  metallic: ['#D4AF37', '#C0C0C0', '#CD7F32', '#B76E79', '#E5E4E2', '#8C92AC'],
+  pastel: ['#faedcb', '#c9e4de', '#c6def1', '#dbcdf0', '#f2c6de', '#f7d9c4'],
+  jewel: ['#950060', '#24513d', '#671f10', '#401c74', '#4c0043', '#048c8a']
+};
+
 export default function CreateWedding() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -21,6 +28,8 @@ export default function CreateWedding() {
     theme: 'minimal',
     type: 'wedding',
     message: '',
+    dressCodePalette: 'earthTone',
+    dressCodeColors: DRESS_CODES.earthTone,
   });
 
   useEffect(() => {
@@ -73,6 +82,7 @@ export default function CreateWedding() {
           image_two_url: groomImageUrl,
           type: formData.type,
           message: formData.message.trim() || null,
+          dress_code: formData.dressCodeColors,
         })
         .select('slug, edit_token')
         .single();
@@ -271,6 +281,72 @@ export default function CreateWedding() {
                     </span>
                   </motion.button>
                 ))}
+              </div>
+            </motion.div>
+
+            {/* Section 3.5: Dress Code */}
+            <motion.div variants={itemVariants} className="space-y-6">
+              <div className="flex items-center gap-3 text-[#8a4b3b]">
+                <h3 className="font-serif text-lg italic">Choose Your Dress Code</h3>
+                <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#eadecc]"></span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(DRESS_CODES).map(([key, colors]) => (
+                  <motion.button
+                    key={key}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, dressCodePalette: key, dressCodeColors: colors })}
+                    className={`relative p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${
+                      formData.dressCodePalette === key ? 'border-[#8a4b3b] shadow-lg shadow-pink-100 bg-white' : 'border-[#f0e4dc] bg-white/50 hover:bg-white'
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#8a6b52]">
+                      {key.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                    <div className="flex gap-1">
+                      {colors.map((c, i) => (
+                        <div key={i} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm" style={{ backgroundColor: c }}></div>
+                      ))}
+                    </div>
+                  </motion.button>
+                ))}
+
+                {/* Custom Palette Button */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, dressCodePalette: 'custom' })}
+                  className={`relative p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${
+                    formData.dressCodePalette === 'custom' ? 'border-[#8a4b3b] shadow-lg shadow-pink-100 bg-white' : 'border-[#f0e4dc] bg-white/50 hover:bg-white'
+                  }`}
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#8a6b52]">
+                    Custom Palette
+                  </span>
+                  <div className="flex gap-1">
+                    {formData.dressCodeColors.map((c, i) => (
+                      <div key={i} className="relative w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden shadow-sm border border-black/10">
+                         {formData.dressCodePalette === 'custom' ? (
+                            <input 
+                              type="color" 
+                              value={c} 
+                              onChange={(e) => {
+                                const newColors = [...formData.dressCodeColors];
+                                newColors[i] = e.target.value;
+                                setFormData({ ...formData, dressCodeColors: newColors });
+                              }}
+                              className="absolute inset-[-10px] w-[200%] h-[200%] cursor-pointer border-0 p-0"
+                            />
+                         ) : (
+                            <div className="w-full h-full bg-gradient-to-tr from-pink-300 via-purple-300 to-indigo-300"></div>
+                         )}
+                      </div>
+                    ))}
+                  </div>
+                </motion.button>
               </div>
             </motion.div>
 

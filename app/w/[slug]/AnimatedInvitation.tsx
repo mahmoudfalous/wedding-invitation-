@@ -319,6 +319,23 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
         </motion.div>
       </section>
 
+      {/* 4.5 DRESS CODE */}
+      {wedding.dress_code && wedding.dress_code.length > 0 && (
+      <section className="py-16 px-6 max-w-2xl mx-auto text-center">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <h2 className={`text-4xl sm:text-6xl tracking-wide uppercase font-black mb-6 ${theme.fontTitle}`}>Dress Code</h2>
+          <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 mb-8 ${theme.fontBody}`}>
+            We would love it if you wore these colors to our special day!
+          </p>
+          <div className="flex justify-center gap-4 flex-wrap">
+            {wedding.dress_code.map((color: string, i: number) => (
+              <div key={i} className="w-12 h-12 sm:w-16 sm:h-16 rounded-full shadow-lg border-2 border-white/20" style={{ backgroundColor: color }}></div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+      )}
+
       {/* 5. OUTRO */}
       <section className="py-20 px-6 max-w-xl mx-auto text-center">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
