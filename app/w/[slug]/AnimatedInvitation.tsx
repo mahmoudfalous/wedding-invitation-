@@ -37,6 +37,12 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
   const [showContent, setShowContent] = useState(false);
   const [envelopeOpen, setEnvelopeOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const weddingDate = new Date(wedding.wedding_date);
 
   const monthName = weddingDate.toLocaleString('en-US', { month: 'long' });
@@ -76,7 +82,7 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
     setEnvelopeOpen(true);
     setTimeout(() => {
       setShowContent(true);
-    }, 2800);
+    }, 2400);
   };
 
   const { scrollYProgress } = useScroll();
@@ -88,88 +94,168 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
         {!showContent ? (
           <motion.main
             key="intro"
-            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
+            exit={{ opacity: 0, transition: { duration: 0.8 } }}
             className={`w-full min-h-screen flex flex-col items-center justify-center ${theme.bg} ${theme.text} fixed inset-0 z-50 overflow-hidden`}
           >
+            {/* Ambient Particles */}
+            {mounted && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(20)].map((_, i) => {
+                  const size = Math.random() * 6 + 2;
+                  return (
+                    <motion.div
+                      key={i}
+                      className={`absolute rounded-full opacity-20`}
+                      style={{
+                        backgroundColor: 'currentColor',
+                        width: size,
+                        height: size,
+                        left: Math.random() * 100 + "%",
+                        top: Math.random() * 100 + "%",
+                      }}
+                      animate={{ 
+                        y: [0, -100],
+                        opacity: [0, 0.4, 0],
+                        scale: [0.5, 1, 0.5]
+                      }}
+                      transition={{ 
+                        duration: Math.random() * 5 + 5, 
+                        repeat: Infinity, 
+                        ease: "easeInOut",
+                        delay: Math.random() * 5
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }} 
-              animate={{ scale: 1, opacity: 1 }} 
-              transition={{ duration: 1.2, ease: "easeOut" }}
-              className="relative w-[320px] h-[220px] sm:w-[420px] sm:h-[280px] cursor-pointer mt-12"
+              initial={{ scale: 0.9, opacity: 0, y: 50 }} 
+              animate={{ scale: 1, opacity: 1, y: envelopeOpen ? 0 : [0, -10, 0] }} 
+              transition={{ 
+                y: envelopeOpen ? { duration: 0.5 } : { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.2 },
+                scale: { duration: 1.2, ease: "easeOut" },
+                opacity: { duration: 1.2, ease: "easeOut" }
+              }}
+              whileHover={!envelopeOpen ? { scale: 1.05, transition: { duration: 0.3 } } : {}}
+              whileTap={!envelopeOpen ? { scale: 0.95 } : {}}
+              className="relative w-[320px] h-[220px] sm:w-[420px] sm:h-[280px] cursor-pointer mt-12 drop-shadow-2xl"
               onClick={handleOpenEnvelope}
               style={{ perspective: "1000px" }}
             >
               {/* Back inside of Envelope */}
-              <div className={`absolute inset-0 rounded-md shadow-2xl ${theme.cardBg} brightness-95 border ${theme.border}`}></div>
+              <motion.div 
+                animate={envelopeOpen ? { y: 400, opacity: 0 } : { y: 0, opacity: 1 }}
+                transition={{ delay: 1.4, duration: 0.8, ease: "easeIn" }}
+                className={`absolute inset-0 rounded-md shadow-2xl ${theme.cardBg} brightness-95 border ${theme.border}`}
+              ></motion.div>
 
               {/* The Letter inside */}
               <motion.div 
-                initial={{ y: 0 }}
-                animate={envelopeOpen ? { y: -200, scale: 1.05, zIndex: 30 } : { y: 0 }}
-                transition={{ duration: 1.2, delay: 0.8, ease: "easeOut" }}
-                className={`absolute inset-x-3 top-3 bottom-3 ${theme.bg} shadow-md flex flex-col items-center justify-center p-4 z-10 border ${theme.border} rounded-sm`}
+                initial={{ y: 0, scale: 1, opacity: 1, zIndex: 10 }}
+                animate={
+                  envelopeOpen 
+                    ? { 
+                        y: [0, -120, -120, 0], 
+                        scale: [1, 1, 1.2, 20], 
+                        zIndex: [10, 40, 40, 40] 
+                      } 
+                    : { y: 0, scale: 1, zIndex: 10 }
+                }
+                transition={
+                  envelopeOpen
+                    ? { 
+                        delay: 0.4,
+                        duration: 2.0, 
+                        times: [0, 0.3, 0.6, 1], 
+                        ease: "easeInOut" 
+                      }
+                    : { duration: 0.8 }
+                }
+                className={`absolute inset-x-3 top-3 bottom-3 ${theme.bg} shadow-md flex flex-col items-center justify-center p-4 border ${theme.border} rounded-sm`}
               >
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 mb-4 opacity-40 ${theme.accent}`}>
-                  {wedding.type === 'engagement' ? (
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>
-                  ) : (
-                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                  )}
-                </div>
-                <h3 className={`text-2xl sm:text-3xl italic text-center ${theme.fontTitle} mb-2`}>
-                  {wedding.partner_one} & {wedding.partner_two}
-                </h3>
-                <p className={`text-[10px] sm:text-xs tracking-[0.2em] uppercase opacity-50 ${theme.fontBody}`}>Formal {wedding.type === 'engagement' ? 'Engagement' : 'Wedding'} Invitation</p>
+                <motion.div 
+                  animate={{ opacity: envelopeOpen ? 0 : 1 }}
+                  transition={{ delay: 1.2, duration: 0.3 }}
+                  className="flex flex-col items-center w-full"
+                >
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 mb-4 opacity-40 ${theme.accent}`}>
+                    {wedding.type === 'engagement' ? (
+                      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>
+                    ) : (
+                      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    )}
+                  </div>
+                  <h3 className={`text-2xl sm:text-3xl italic text-center ${theme.fontTitle} mb-2`}>
+                    {wedding.partner_one} & {wedding.partner_two}
+                  </h3>
+                  <p className={`text-[10px] sm:text-xs tracking-[0.2em] uppercase opacity-50 ${theme.fontBody}`}>Formal {wedding.type === 'engagement' ? 'Engagement' : 'Wedding'} Invitation</p>
+                </motion.div>
               </motion.div>
 
-              {/* Envelope Body (Bottom, Left, Right flaps) */}
-              <div 
-                className={`absolute inset-0 z-20 pointer-events-none ${theme.cardBg} brightness-105 drop-shadow-xl rounded-b-md`}
-                style={{ clipPath: "polygon(0 0, 50% 55%, 100% 0, 100% 100%, 0 100%)" }}
-              >
-                 <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" preserveAspectRatio="none">
-                   <line x1="0" y1="0" x2="50%" y2="55%" stroke="currentColor" strokeWidth="3" />
-                   <line x1="100%" y1="0" x2="50%" y2="55%" stroke="currentColor" strokeWidth="3" />
-                 </svg>
-              </div>
-
-              {/* Top Flap */}
+              {/* Left Gatefold Door */}
               <motion.div 
-                initial={{ rotateX: 0 }}
-                animate={envelopeOpen ? { rotateX: 180, zIndex: 0 } : { rotateX: 0 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-                style={{ transformOrigin: "top", clipPath: "polygon(0 0, 100% 0, 50% 55%)" }}
-                className={`absolute top-0 left-0 right-0 h-full z-30 ${theme.cardBg} brightness-100 drop-shadow-md origin-top`}
+                initial={{ rotateY: 0, opacity: 1 }}
+                animate={
+                  envelopeOpen 
+                    ? { rotateY: -140, opacity: 0, zIndex: 20 } 
+                    : { rotateY: 0, opacity: 1, zIndex: 30 }
+                }
+                transition={{ 
+                  rotateY: { duration: 1.2, ease: "easeInOut" },
+                  opacity: { delay: 0.8, duration: 0.8, ease: "easeIn" }
+                }}
+                style={{ transformOrigin: "left" }}
+                className={`absolute top-0 left-0 bottom-0 w-1/2 ${theme.cardBg} brightness-100 shadow-[2px_0_10px_rgba(0,0,0,0.1)] rounded-l-md border-y border-l border-r border-r-black/5 ${theme.border}`}
               >
-                 <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" preserveAspectRatio="none">
-                   <line x1="0" y1="0" x2="50%" y2="55%" stroke="currentColor" strokeWidth="3" />
-                   <line x1="100%" y1="0" x2="50%" y2="55%" stroke="currentColor" strokeWidth="3" />
-                 </svg>
+                 <div className={`absolute inset-2 border border-current opacity-20 ${theme.accent} rounded-sm`} />
+              </motion.div>
+
+              {/* Right Gatefold Door */}
+              <motion.div 
+                initial={{ rotateY: 0, opacity: 1 }}
+                animate={
+                  envelopeOpen 
+                    ? { rotateY: 140, opacity: 0, zIndex: 20 } 
+                    : { rotateY: 0, opacity: 1, zIndex: 30 }
+                }
+                transition={{ 
+                  rotateY: { duration: 1.2, ease: "easeInOut" },
+                  opacity: { delay: 0.8, duration: 0.8, ease: "easeIn" }
+                }}
+                style={{ transformOrigin: "right" }}
+                className={`absolute top-0 right-0 bottom-0 w-1/2 ${theme.cardBg} brightness-100 shadow-[-2px_0_10px_rgba(0,0,0,0.1)] rounded-r-md border-y border-r border-l border-l-black/5 ${theme.border}`}
+              >
+                 <div className={`absolute inset-2 border border-current opacity-20 ${theme.accent} rounded-sm`} />
               </motion.div>
 
               {/* Wax Seal */}
-              <AnimatePresence>
-                {!envelopeOpen && (
-                  <motion.div 
-                    exit={{ opacity: 0, scale: 0 }}
-                    className="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-40"
-                  >
-                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-lg flex items-center justify-center border ring-2 ${wedding.type === 'engagement' ? 'bg-indigo-800 border-indigo-950/30 ring-indigo-900/20' : 'bg-rose-800 border-rose-950/30 ring-rose-900/20'}`}>
-                      <span className="text-white/90 font-serif italic text-2xl sm:text-3xl drop-shadow-sm">
-                        {wedding.partner_one[0]}
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <motion.div 
+                animate={
+                  envelopeOpen 
+                    ? { scale: 2, opacity: 0, filter: "blur(4px)" } 
+                    : { scale: 1, opacity: 1, filter: "blur(0px)" }
+                }
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40"
+              >
+                <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-lg flex items-center justify-center border ring-2 ${wedding.type === 'engagement' ? 'bg-indigo-800 border-indigo-950/30 ring-indigo-900/20' : 'bg-rose-800 border-rose-950/30 ring-rose-900/20'}`}>
+                  <span className="text-white/90 font-serif italic text-xl sm:text-2xl drop-shadow-sm flex items-center gap-[2px]">
+                    <span>{wedding.partner_one[0]}</span>
+                    <span className="text-xs sm:text-sm text-white/70">&</span>
+                    <span>{wedding.partner_two[0]}</span>
+                  </span>
+                </div>
+              </motion.div>
             </motion.div>
 
             <motion.p 
               animate={{ opacity: envelopeOpen ? 0 : 1 }}
+              transition={{ duration: 0.3 }}
               className={`mt-16 text-xs sm:text-sm tracking-[0.3em] uppercase opacity-60 ${theme.fontBody}`}
             >
-              Tap to open envelope
+              Tap to open
             </motion.p>
           </motion.main>
         ) : (
