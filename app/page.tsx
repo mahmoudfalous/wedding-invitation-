@@ -82,7 +82,7 @@ export default function Home() {
           </motion.h1>
 
           <motion.p variants={fadeInUp} className="max-w-md mx-auto text-lg md:text-xl font-serif italic text-[#8a6b52] leading-relaxed mb-10">
-            "A wedding invitation is the first chapter of your forever." <br />
+            "Your wedding or engagement invitation is the first chapter of your forever." <br />
             Create yours in an instant, keep it for a lifetime.
           </motion.p>
 
@@ -126,7 +126,7 @@ export default function Home() {
               className="md:mt-12 space-y-8"
             >
               <h2 className="text-5xl font-serif italic leading-tight">Every detail, <br/> <span className="text-[#e4a6a1]">crafted</span> with love.</h2>
-              <p className="text-[#8a6b52] text-lg leading-relaxed font-serif">We believe your invitation should be as unique as your bond. Choose from hand-picked themes designed for the modern couple.</p>
+              <p className="text-[#8a6b52] text-lg leading-relaxed font-serif">We believe your wedding or engagement invitation should be as unique as your bond. Choose from hand-picked themes designed for the modern couple to perfectly capture your aesthetic.</p>
             </motion.div>
 
             {/* Floating Image 1 */}
@@ -134,12 +134,16 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               whileInView={{ opacity: 1, scale: 1, y: 0 }}
               viewport={{ once: true }}
-              animate={{ y: [0, -15, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="relative group overflow-hidden rounded-2xl shadow-2xl aspect-[3/4]"
+              transition={{ duration: 0.8 }}
             >
-              <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=2069&auto=format&fit=crop" alt="Wedding Detail" className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-1000" />
-              <div className="absolute inset-0 bg-[#7a3e30]/10" />
+              <motion.div
+                animate={{ y: [0, -15, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="relative group overflow-hidden rounded-2xl shadow-2xl aspect-[3/4]"
+              >
+                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=2069&auto=format&fit=crop" alt="Wedding Detail" className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-1000" />
+                <div className="absolute inset-0 bg-[#7a3e30]/10" />
+              </motion.div>
             </motion.div>
 
             {/* Floating Image 2 */}
@@ -147,12 +151,17 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               whileInView={{ opacity: 1, scale: 1, y: 0 }}
               viewport={{ once: true }}
-              animate={{ y: [0, 15, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-              className="relative group overflow-hidden rounded-2xl shadow-2xl aspect-[3/4] md:-mt-12"
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="md:-mt-12"
             >
-              <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop" alt="Couple" className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-1000" />
-              <div className="absolute inset-0 bg-[#7a3e30]/10" />
+              <motion.div
+                animate={{ y: [0, 15, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                className="relative group overflow-hidden rounded-2xl shadow-2xl aspect-[3/4]"
+              >
+                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop" alt="Couple" className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-1000" />
+                <div className="absolute inset-0 bg-[#7a3e30]/10" />
+              </motion.div>
             </motion.div>
           </div>
         </div>
