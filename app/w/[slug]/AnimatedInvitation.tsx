@@ -253,10 +253,14 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
               <circle cx="40" cy="20" r="16" />
             </svg>
           </div>
-          <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 ${theme.fontBody}`}>
-            {wedding.type === 'engagement'
-              ? "We are thrilled to announce our engagement! Please join us for a celebration of love, laughter, and our new chapter together. We can't wait to share this beautiful milestone with our dearest friends and family."
-              : "Something wonderful is about to happen in our lives. We would be so happy to share this special day with the people who matter most to us — our family and dearest friends. Please join us as we celebrate the beginning of our forever."}
+          <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 whitespace-pre-wrap ${theme.fontBody}`}>
+            {wedding.message ? (
+              wedding.message
+            ) : wedding.type === 'engagement' ? (
+              "We are thrilled to announce our engagement! Please join us for a celebration of love, laughter, and our new chapter together. We can't wait to share this beautiful milestone with our dearest friends and family."
+            ) : (
+              "Something wonderful is about to happen in our lives. We would be so happy to share this special day with the people who matter most to us — our family and dearest friends. Please join us as we celebrate the beginning of our forever."
+            )}
           </p>
         </motion.div>
       </section>

@@ -20,6 +20,7 @@ export default function CreateWedding() {
     location: '',
     theme: 'minimal',
     type: 'wedding',
+    message: '',
   });
 
   useEffect(() => {
@@ -71,6 +72,7 @@ export default function CreateWedding() {
           image_one_url: brideImageUrl,
           image_two_url: groomImageUrl,
           type: formData.type,
+          message: formData.message.trim() || null,
         })
         .select('slug, edit_token')
         .single();
@@ -224,6 +226,24 @@ export default function CreateWedding() {
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   />
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Section 2.5: Message */}
+            <motion.div variants={itemVariants} className="space-y-6">
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#eadecc]"></span>
+                <h3 className="font-serif text-lg italic text-[#8a4b3b]">A Personal Note</h3>
+                <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#eadecc]"></span>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest font-bold text-[#8a6b52] ml-1">Special Message (Optional)</label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. We can't wait to celebrate with you!"
+                  className="w-full border-b-2 border-[#f0e4dc] focus:border-[#e4a6a1] bg-transparent p-3 outline-none transition-all placeholder:text-stone-300 font-serif text-lg resize-none"
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                ></textarea>
               </div>
             </motion.div>
 
