@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion'; // Added Framer Motion
 import { WEDDING_THEMES } from "@/app/constants/themes";
 import { supabase } from "@/app/lib/supabase";
+import dynamic from 'next/dynamic';
+
+const MapPicker = dynamic(() => import('@/app/components/MapPicker'), {
+  ssr: false
+});
 
 const DRESS_CODES = {
   earthTone: ['#9A6B5B', '#C89F88', '#E6D7C3', '#C79A63', '#DCC696', '#685044'],
@@ -17,6 +22,8 @@ const DRESS_CODES = {
 export default function CreateWedding() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [brideImage, setBrideImage] = useState<File | null>(null);
   const [groomImage, setGroomImage] = useState<File | null>(null);
   const [today, setToday] = useState('');
@@ -25,6 +32,7 @@ export default function CreateWedding() {
     groomName: '',
     date: '',
     location: '',
+    locationUrl: '',
     theme: 'minimal',
     type: 'wedding',
     message: '',
@@ -61,6 +69,14 @@ export default function CreateWedding() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+
+    // Validation
+    if (!formData.brideName || !formData.groomName || !formData.date || !formData.location) {
+      setErrorMsg('Please fill in all required text fields.');
+      return;
+    }
+
     setLoading(true);
     try {
       const slug = generateSlug(formData.brideName, formData.groomName, formData.date, formData.location);
@@ -77,6 +93,7 @@ export default function CreateWedding() {
           partner_two: formData.groomName,
           wedding_date: formData.date,
           location: formData.location,
+          location_url: formData.locationUrl || null,
           theme: formData.theme,
           image_one_url: brideImageUrl,
           image_two_url: groomImageUrl,
@@ -152,6 +169,12 @@ export default function CreateWedding() {
 
           <form onSubmit={handleSubmit} className="space-y-10">
 
+            {errorMsg && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-sm text-center font-medium">
+                {errorMsg}
+              </motion.div>
+            )}
+
             {/* Section 0: Event Type */}
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3">
@@ -212,7 +235,7 @@ export default function CreateWedding() {
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#eadecc]"></span>
-                <h3 className="font-serif text-lg italic text-[#8a4b3b]">The Special Day</h3>
+                <h3 className="font-serif text-lg italic text-[#8a4b3b]">The Special Day & Location</h3>
                 <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#eadecc]"></span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -227,7 +250,7 @@ export default function CreateWedding() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest font-bold text-[#8a6b52] ml-1">Location</label>
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-[#8a6b52] ml-1">Location Name</label>
                   <input
                     required
                     type="text"
@@ -236,6 +259,36 @@ export default function CreateWedding() {
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <label className="text-[10px] uppercase tracking-widest font-bold text-[#8a6b52] ml-1">Location Map (Optional)</label>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsMapModalOpen(true)}
+                    className="flex-1 py-3 px-4 rounded-xl border-2 border-dashed border-[#e4a6a1] text-[#8a4b3b] hover:bg-[#fcf9f6] transition-colors flex items-center justify-center gap-2 font-medium"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    {formData.locationUrl ? 'Change Pinned Location' : 'Open Map to Pin Location'}
+                  </button>
+                  {formData.locationUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, locationUrl: '' })}
+                      className="p-3 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 transition-colors"
+                      title="Remove Pin"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  )}
+                </div>
+                {formData.locationUrl && (
+                  <p className="text-xs text-emerald-600 ml-1 font-medium flex items-center gap-1 mt-2">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    Location pinned successfully
+                  </p>
+                )}
               </div>
             </motion.div>
 
@@ -399,6 +452,18 @@ export default function CreateWedding() {
           </form>
         </div>
       </motion.div>
+
+      <AnimatePresence>
+        {isMapModalOpen && (
+          <MapPicker 
+            onClose={() => setIsMapModalOpen(false)}
+            onLocationSelect={(lat, lng) => {
+              const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+              setFormData({ ...formData, locationUrl: url });
+            }}
+          />
+        )}
+      </AnimatePresence>
     </main>
   );
 }

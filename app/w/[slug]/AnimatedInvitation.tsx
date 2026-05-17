@@ -304,9 +304,27 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className={`text-5xl sm:text-7xl tracking-wide uppercase font-black mb-6 ${theme.fontTitle}`}>Location</h2>
           <p className={`text-3xl mb-6 italic ${theme.fontTitle}`}>{wedding.location}</p>
-          <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 mb-10 ${theme.fontBody}`}>
+          <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 mb-8 ${theme.fontBody}`}>
             An open-air {wedding.type === 'engagement' ? 'engagement' : 'wedding'} venue tucked among olive trees and warm string lights, just outside the heart of {wedding.location}.
           </p>
+
+          {wedding.location_url && (
+            <div className="mb-10">
+              <a 
+                href={wedding.location_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-2 px-8 py-4 rounded-full border-2 transition-all hover:scale-105 tracking-[0.1em] uppercase text-xs sm:text-sm shadow-xl font-bold bg-white text-stone-800 border-transparent hover:shadow-2xl`}
+              >
+                <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                View on Map
+              </a>
+            </div>
+          )}
+
           <div className="w-full aspect-[4/3] sm:aspect-video rounded-3xl overflow-hidden shadow-2xl relative">
             <motion.img 
               style={{ scale: scaleImage }}
