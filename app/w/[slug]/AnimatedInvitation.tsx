@@ -416,14 +416,55 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
               <iframe 
                 src={(() => {
                   let q = wedding.location;
-                  if (wedding.location_url.includes('query=')) {
-                    const m = wedding.location_url.match(/query=([^&]+)/);
-                    if (m && m[1]) q = m[1];
-                  } else {
-                    // It could be a direct google maps link pasted
-                    q = wedding.location_url;
+                  let ftid = '';
+                  const resolvedUrl = wedding.resolved_location_url || wedding.location_url;
+                  
+                  if (resolvedUrl) {
+                    // Extract ftid (Feature ID) if present in the URL
+                    const ftidMatch = resolvedUrl.match(/[?&]ftid=([^&]+)/);
+                    if (ftidMatch && ftidMatch[1]) {
+                      try {
+                        ftid = decodeURIComponent(ftidMatch[1]);
+                      } catch {
+                        ftid = ftidMatch[1];
+                      }
+                    }
+
+                    if (resolvedUrl.includes('query=')) {
+                      const m = resolvedUrl.match(/query=([^&]+)/);
+                      if (m && m[1]) {
+                        try {
+                          q = decodeURIComponent(m[1]);
+                        } catch {
+                          q = m[1];
+                        }
+                      }
+                    } else if (resolvedUrl.includes('q=')) {
+                      const m = resolvedUrl.match(/q=([^&]+)/);
+                      if (m && m[1]) {
+                        try {
+                          q = decodeURIComponent(m[1]);
+                        } catch {
+                          q = m[1];
+                        }
+                      }
+                    } else {
+                      // Extract coordinates from @lat,lng pattern if present
+                      const atCoordMatch = resolvedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                      if (atCoordMatch) {
+                        q = `${atCoordMatch[1]},${atCoordMatch[2]}`;
+                      } else {
+                        // If it's a general URL and no coordinates found, fallback to location name
+                        q = wedding.location;
+                      }
+                    }
                   }
-                  return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+
+                  let embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+                  if (ftid) {
+                    embedUrl += `&ftid=${ftid}`;
+                  }
+                  return embedUrl;
                 })()}
                 className="w-full h-full border-0 grayscale-[20%]"
                 allowFullScreen

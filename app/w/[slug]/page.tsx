@@ -60,6 +60,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+async function resolveShortenedUrl(url: string | null): Promise<string | null> {
+  if (!url) return null;
+  if (!url.includes('maps.app.goo.gl') && !url.includes('goo.gl/maps')) {
+    return url;
+  }
+  try {
+    const response = await fetch(url, {
+      method: 'HEAD',
+      redirect: 'follow',
+    });
+    if (response.url) {
+      return response.url;
+    }
+  } catch (error) {
+    console.error('Failed to resolve shortened map URL:', error);
+  }
+  return url;
+}
+
 // Your exact page component below!
 export default async function WeddingInvitationPage({ params }: Props) {
   const resolvedParams = await params;
@@ -74,8 +93,15 @@ export default async function WeddingInvitationPage({ params }: Props) {
     notFound();
   }
 
+  // Resolve shortened map URL on the server-side
+  const resolvedLocationUrl = await resolveShortenedUrl(wedding.location_url);
+  const weddingWithResolvedUrl = {
+    ...wedding,
+    resolved_location_url: resolvedLocationUrl
+  };
+
   const theme = WEDDING_THEMES[wedding.theme] || WEDDING_THEMES.minimal;
 
   // Render our highly-animated client component
-  return <AnimatedInvitation wedding={wedding} theme={theme} />;
+  return <AnimatedInvitation wedding={weddingWithResolvedUrl} theme={theme} />;
 }
