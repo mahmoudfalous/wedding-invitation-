@@ -9,6 +9,7 @@ export const revalidate = 60;
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ anim?: string }>;
 }
 
 // 🌟 NEW: This generates a beautiful preview card when shared on WhatsApp!
@@ -80,8 +81,9 @@ async function resolveShortenedUrl(url: string | null): Promise<string | null> {
 }
 
 // Your exact page component below!
-export default async function WeddingInvitationPage({ params }: Props) {
+export default async function WeddingInvitationPage({ params, searchParams }: Props) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
 
   const { data: wedding, error } = await supabase
     .from('weddings')
@@ -95,12 +97,20 @@ export default async function WeddingInvitationPage({ params }: Props) {
 
   // Resolve shortened map URL on the server-side
   const resolvedLocationUrl = await resolveShortenedUrl(wedding.location_url);
+
+  // Allow dynamic query parameter override for easy live previewing
+  const themeField = resolvedSearchParams?.anim 
+    ? `${(wedding.theme || '').split(':')[0]}:${resolvedSearchParams.anim}` 
+    : wedding.theme;
+
   const weddingWithResolvedUrl = {
     ...wedding,
+    theme: themeField,
     resolved_location_url: resolvedLocationUrl
   };
 
-  const theme = WEDDING_THEMES[wedding.theme] || WEDDING_THEMES.minimal;
+  const [themeKey] = (themeField || '').split(':');
+  const theme = WEDDING_THEMES[themeKey] || WEDDING_THEMES.minimal;
 
   // Render our highly-animated client component
   return <AnimatedInvitation wedding={weddingWithResolvedUrl} theme={theme} />;

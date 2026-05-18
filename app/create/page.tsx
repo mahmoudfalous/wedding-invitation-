@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'; // Added Framer Motion
 import { WEDDING_THEMES } from "@/app/constants/themes";
 import { supabase } from "@/app/lib/supabase";
 import dynamic from 'next/dynamic';
+import AnimatedInvitation from "@/app/w/[slug]/AnimatedInvitation";
 
 const MapPicker = dynamic(() => import('@/app/components/MapPicker'), {
   ssr: false
@@ -27,6 +28,7 @@ export default function CreateWedding() {
   const [brideImage, setBrideImage] = useState<File | null>(null);
   const [groomImage, setGroomImage] = useState<File | null>(null);
   const [today, setToday] = useState('');
+  const [previewStyle, setPreviewStyle] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     brideName: '',
     groomName: '',
@@ -38,6 +40,7 @@ export default function CreateWedding() {
     message: '',
     dressCodePalette: 'earthTone',
     dressCodeColors: DRESS_CODES.earthTone,
+    animationStyle: 'gate',
   });
 
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function CreateWedding() {
           wedding_date: formData.date,
           location: formData.location,
           location_url: formData.locationUrl || null,
-          theme: formData.theme,
+          theme: `${formData.theme}:${formData.animationStyle}`,
           image_one_url: brideImageUrl,
           image_two_url: groomImageUrl,
           type: formData.type,
@@ -345,6 +348,50 @@ export default function CreateWedding() {
               </div>
             </motion.div>
 
+            {/* Section 3.2: Invitation Animation */}
+            <motion.div variants={itemVariants} className="space-y-6">
+              <div className="flex items-center gap-3 text-[#8a4b3b]">
+                <h3 className="font-serif text-lg italic">Choose Invitation Animation</h3>
+                <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#eadecc]"></span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {[
+                  { key: 'envelope', label: 'Classic Envelope', icon: '✉️' },
+                  { key: 'locket', label: 'Heart Locket', icon: '💖' },
+                  { key: 'gate', label: 'Garden Gates', icon: '🌹' },
+                  { key: 'book', label: 'Storybook Clasp', icon: '📖' },
+                  { key: 'curtain', label: 'Velvet Curtains', icon: '🎭' },
+                  { key: 'scroll', label: 'Vintage Scroll', icon: '📜' },
+                  { key: 'rose', label: 'Blooming Rose', icon: '🌸' },
+                ].map((anim) => (
+                  <motion.button
+                    key={anim.key}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, animationStyle: anim.key })}
+                    className={`relative p-4 pb-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-2 bg-white ${
+                      formData.animationStyle === anim.key ? 'border-[#8a4b3b] shadow-lg shadow-pink-100 bg-[#fffcfb]' : 'border-[#f0e4dc] bg-white/50 hover:bg-white'
+                    }`}
+                  >
+                    <span className="text-2xl">{anim.icon}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#8a6b52] text-center">
+                      {anim.label}
+                    </span>
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewStyle(anim.key);
+                      }}
+                      className="text-[8px] font-bold tracking-widest text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 border border-pink-200 px-2.5 py-0.5 rounded-full mt-1.5 transition-all flex items-center gap-0.5 cursor-pointer uppercase select-none"
+                    >
+                      👁️ Preview
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+
             {/* Section 3.5: Dress Code */}
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3 text-[#8a4b3b]">
@@ -470,6 +517,56 @@ export default function CreateWedding() {
               setFormData({ ...formData, locationUrl: url });
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* The Live Animation Preview Modal */}
+      <AnimatePresence>
+        {previewStyle && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-stone-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4"
+          >
+            {/* Floating Close Button */}
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setPreviewStyle(null)}
+              className="absolute top-6 right-6 z-50 bg-white/10 hover:bg-white/20 border border-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-2xl transition-all"
+            >
+              ✕
+            </motion.button>
+
+            {/* Modal Info Banner */}
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 text-center pointer-events-none w-full px-4">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-pink-300 font-bold mb-1">Live Interactive Preview</p>
+              <h4 className="text-white text-base sm:text-lg font-serif italic">Tap the card to test its transition</h4>
+            </div>
+
+            {/* Live Invitation Rendering */}
+            <div className="w-full max-w-lg h-[80vh] sm:h-[85vh] rounded-3xl bg-stone-950 border border-stone-800/80 shadow-2xl relative flex items-center justify-center p-2 sm:p-6 overflow-hidden select-none">
+              <div className="scale-[0.8] sm:scale-100 flex items-center justify-center w-full h-full">
+                <AnimatedInvitation 
+                  wedding={{
+                    partner_one: formData.brideName || 'Bride',
+                    partner_two: formData.groomName || 'Groom',
+                    wedding_date: formData.date || new Date().toISOString().split('T')[0],
+                    location: formData.location || 'The White Garden, Cairo',
+                    location_url: formData.locationUrl || null,
+                    theme: `${formData.theme}:${previewStyle}`,
+                    type: formData.type || 'wedding',
+                    message: formData.message || 'We are so excited to celebrate our love story with you!',
+                    image_one_url: null,
+                    image_two_url: null,
+                    resolved_location_url: formData.locationUrl || null,
+                  }}
+                  theme={WEDDING_THEMES[formData.theme] || WEDDING_THEMES.minimal}
+                />
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </main>
