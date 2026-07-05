@@ -1111,24 +1111,26 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
               langConfig={langConfig}
             />
 
-            <RsvpSection
-              wedding={wedding}
-              theme={theme}
-              rsvpSubmitted={rsvpSubmitted}
-              setRsvpSubmitted={setRsvpSubmitted}
-              rsvpAttending={rsvpAttending}
-              setRsvpAttending={setRsvpAttending}
-              rsvpName={rsvpName}
-              setRsvpName={setRsvpName}
-              rsvpGuestsCount={rsvpGuestsCount}
-              setRsvpGuestsCount={setRsvpGuestsCount}
-              rsvpNotes={rsvpNotes}
-              setRsvpNotes={setRsvpNotes}
-              rsvpLoading={rsvpLoading}
-              rsvpError={rsvpError}
-              handleRsvpSubmit={handleRsvpSubmit}
-              langConfig={langConfig}
-            />
+            {!isCreator && (
+              <RsvpSection
+                wedding={wedding}
+                theme={theme}
+                rsvpSubmitted={rsvpSubmitted}
+                setRsvpSubmitted={setRsvpSubmitted}
+                rsvpAttending={rsvpAttending}
+                setRsvpAttending={setRsvpAttending}
+                rsvpName={rsvpName}
+                setRsvpName={setRsvpName}
+                rsvpGuestsCount={rsvpGuestsCount}
+                setRsvpGuestsCount={setRsvpGuestsCount}
+                rsvpNotes={rsvpNotes}
+                setRsvpNotes={setRsvpNotes}
+                rsvpLoading={rsvpLoading}
+                rsvpError={rsvpError}
+                handleRsvpSubmit={handleRsvpSubmit}
+                langConfig={langConfig}
+              />
+            )}
 
             <CreatorDashboard
               isCreator={isCreator}
