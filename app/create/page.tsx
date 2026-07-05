@@ -29,7 +29,7 @@ export default function CreateWedding() {
   const [groomImage, setGroomImage] = useState<File | null>(null);
   const [today, setToday] = useState('');
   const [previewStyle, setPreviewStyle] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const DEFAULT_FORM_DATA = {
     brideName: '',
     groomName: '',
     date: '',
@@ -41,12 +41,76 @@ export default function CreateWedding() {
     dressCodePalette: 'earthTone',
     dressCodeColors: DRESS_CODES.earthTone,
     animationStyle: 'gate',
-  });
+  };
+
+  const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
+  const [savedInvitations, setSavedInvitations] = useState<any[]>([]);
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [existingImages, setExistingImages] = useState({ bride: '', groom: '' });
 
   useEffect(() => {
     const currentDate = new Date().toISOString().split('T')[0];
     setToday(currentDate);
+
+    const fetchSavedInvitations = async () => {
+      const slugs = Object.keys(localStorage)
+        .filter((key) => key.startsWith('wedding_edit_'))
+        .map((key) => key.replace('wedding_edit_', ''));
+
+      if (slugs.length === 0) return;
+
+      const { data, error } = await supabase
+        .from('weddings')
+        .select('slug, partner_one, partner_two, wedding_date, type')
+        .in('slug', slugs);
+
+      if (!error && data) {
+        setSavedInvitations(data);
+      }
+    };
+    
+    fetchSavedInvitations();
   }, []);
+
+  const loadInvitation = async (slug: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('weddings')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (!error && data) {
+      setEditingSlug(slug);
+      
+      const [theme = 'minimal', animationStyle = 'gate'] = (data.theme || '').split(':');
+
+      setFormData({
+        brideName: data.partner_one,
+        groomName: data.partner_two,
+        date: data.wedding_date,
+        location: data.location,
+        locationUrl: data.location_url || '',
+        theme,
+        animationStyle,
+        type: data.type || 'wedding',
+        message: data.message || '',
+        dressCodePalette: 'custom',
+        dressCodeColors: data.dress_code || DRESS_CODES.earthTone,
+      });
+
+      setExistingImages({
+        bride: data.image_one_url || '',
+        groom: data.image_two_url || ''
+      });
+      setBrideImage(null);
+      setGroomImage(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      alert('Failed to load invitation.');
+    }
+    setLoading(false);
+  };
 
   const generateSlug = (bride: string, groom: string, date: string, location: string) => {
     const datePart = date ? date.split('-').reverse().join('-') : '';
@@ -56,16 +120,29 @@ export default function CreateWedding() {
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`Image ${file.name} is larger than 5 MB.`);
+      return null;
+    }
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
-      const { error: uploadError } = await supabase.storage.from('wedding-photos').upload(filePath, file);
-      if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('wedding-photos').getPublicUrl(filePath);
-      return data.publicUrl;
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+      return data.url;
     } catch (error) {
       console.error('Image upload failed:', error);
+      alert('Failed to upload image. Please try again.');
       return null;
     }
   };
@@ -82,39 +159,70 @@ export default function CreateWedding() {
 
     setLoading(true);
     try {
-      const slug = generateSlug(formData.brideName, formData.groomName, formData.date, formData.location);
-      let brideImageUrl = null;
-      let groomImageUrl = null;
-      if (brideImage) brideImageUrl = await uploadImage(brideImage);
-      if (groomImage) groomImageUrl = await uploadImage(groomImage);
-
-      const { data, error } = await supabase
-        .from('weddings')
-        .insert({
-          slug: slug,
-          partner_one: formData.brideName,
-          partner_two: formData.groomName,
-          wedding_date: formData.date,
-          location: formData.location,
-          location_url: formData.locationUrl || null,
-          theme: `${formData.theme}:${formData.animationStyle}`,
-          image_one_url: brideImageUrl,
-          image_two_url: groomImageUrl,
-          type: formData.type,
-          message: formData.message.trim() || null,
-          dress_code: formData.dressCodeColors,
-        })
-        .select('slug, edit_token')
-        .single();
-
-      if (error) {
-        if (error.code === '23505') alert('This exact invitation already exists!');
-        else throw error;
-        setLoading(false);
-        return;
+      let brideImageUrl = editingSlug ? existingImages.bride : null;
+      let groomImageUrl = editingSlug ? existingImages.groom : null;
+      
+      if (brideImage) {
+        const url = await uploadImage(brideImage);
+        if (url) brideImageUrl = url;
       }
-      localStorage.setItem(`wedding_edit_${data.slug}`, data.edit_token);
-      router.push(`/w/${data.slug}`);
+      if (groomImage) {
+        const url = await uploadImage(groomImage);
+        if (url) groomImageUrl = url;
+      }
+
+      if (editingSlug) {
+        const token = localStorage.getItem(`wedding_edit_${editingSlug}`);
+        const { error } = await supabase
+          .from('weddings')
+          .update({
+            partner_one: formData.brideName,
+            partner_two: formData.groomName,
+            wedding_date: formData.date,
+            location: formData.location,
+            location_url: formData.locationUrl || null,
+            theme: `${formData.theme}:${formData.animationStyle}`,
+            image_one_url: brideImageUrl,
+            image_two_url: groomImageUrl,
+            type: formData.type,
+            message: formData.message.trim() || null,
+            dress_code: formData.dressCodeColors,
+          })
+          .eq('slug', editingSlug)
+          .eq('edit_token', token);
+
+        if (error) throw error;
+        router.push(`/w/${editingSlug}`);
+      } else {
+        const slug = generateSlug(formData.brideName, formData.groomName, formData.date, formData.location);
+        const { data, error } = await supabase
+          .from('weddings')
+          .insert({
+            slug: slug,
+            partner_one: formData.brideName,
+            partner_two: formData.groomName,
+            wedding_date: formData.date,
+            location: formData.location,
+            location_url: formData.locationUrl || null,
+            theme: `${formData.theme}:${formData.animationStyle}`,
+            image_one_url: brideImageUrl,
+            image_two_url: groomImageUrl,
+            type: formData.type,
+            message: formData.message.trim() || null,
+            dress_code: formData.dressCodeColors,
+          })
+          .select('slug, edit_token')
+          .single();
+
+        if (error) {
+          if (error.code === '23505') alert('This exact invitation already exists!');
+          else throw error;
+          setLoading(false);
+          return;
+        }
+        localStorage.setItem(`wedding_edit_${data.slug}`, data.edit_token);
+        router.push(`/w/${data.slug}`);
+      }
     } catch (err) {
       console.error('Submission error:', err);
       alert('Something went wrong.');
@@ -165,9 +273,50 @@ export default function CreateWedding() {
         </button>
 
         <div className={`${activeTheme.cardBg} backdrop-blur-lg p-8 md:p-12 rounded-[2.5rem] shadow-2xl border ${activeTheme.border} transition-colors duration-700`}>
+          {savedInvitations.length > 0 && !editingSlug && (
+            <motion.div variants={itemVariants} className="mb-8">
+              <h3 className="font-serif text-xl italic text-[#8a4b3b] mb-4 text-center">Your Invitations</h3>
+              <div className="grid gap-3">
+                {savedInvitations.map((inv) => (
+                  <div key={inv.slug} className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-[#f0e4dc] flex items-center justify-between hover:border-[#e4a6a1] transition-colors">
+                    <div>
+                      <h4 className="font-medium text-[#5c3a21]">{inv.partner_one} & {inv.partner_two}</h4>
+                      <p className="text-xs text-[#8a6b52] uppercase tracking-wider">{new Date(inv.wedding_date).toLocaleDateString()} • {inv.type}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => router.push(`/w/${inv.slug}`)} className="text-xs px-3 py-1.5 rounded-full border border-[#8a4b3b] text-[#8a4b3b] hover:bg-[#8a4b3b] hover:text-white transition-colors">View</button>
+                      <button onClick={() => loadInvitation(inv.slug)} className="text-xs px-3 py-1.5 rounded-full bg-[#8a4b3b] text-white hover:bg-[#6e3b2e] transition-colors">Edit</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="h-px bg-gradient-to-r from-transparent via-[#eadecc] to-transparent my-8"></div>
+            </motion.div>
+          )}
+
           <div className="text-center mb-10">
+            {editingSlug && (
+              <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm flex justify-between items-center text-left">
+                <span>Currently editing: <strong>{formData.brideName} & {formData.groomName}</strong></span>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setEditingSlug(null);
+                    setFormData(DEFAULT_FORM_DATA);
+                    setExistingImages({ bride: '', groom: '' });
+                    setBrideImage(null);
+                    setGroomImage(null);
+                  }}
+                  className="text-amber-600 hover:text-amber-900 underline font-medium whitespace-nowrap ml-4"
+                >
+                  Cancel Edit
+                </button>
+              </div>
+            )}
             <motion.p variants={itemVariants} className="uppercase tracking-[0.3em] text-[#e4a6a1] text-[10px] font-bold mb-3">Your Journey Starts Here</motion.p>
-            <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-serif font-medium text-[#5c3a21] mb-2 italic">Design Your Story</motion.h1>
+            <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-serif font-medium text-[#5c3a21] mb-2 italic">
+              {editingSlug ? 'Update Your Story' : 'Design Your Story'}
+            </motion.h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-10">
@@ -216,6 +365,7 @@ export default function CreateWedding() {
                   <input
                     required
                     type="text"
+                    value={formData.brideName}
                     placeholder="e.g. Nermeen"
                     className="w-full border-b-2 border-[#f0e4dc] focus:border-[#e4a6a1] bg-transparent p-3 outline-none transition-all placeholder:text-stone-300 font-serif text-lg"
                     onChange={(e) => setFormData({ ...formData, brideName: e.target.value })}
@@ -226,6 +376,7 @@ export default function CreateWedding() {
                   <input
                     required
                     type="text"
+                    value={formData.groomName}
                     placeholder="e.g. Youssef"
                     className="w-full border-b-2 border-[#f0e4dc] focus:border-[#e4a6a1] bg-transparent p-3 outline-none transition-all placeholder:text-stone-300 font-serif text-lg"
                     onChange={(e) => setFormData({ ...formData, groomName: e.target.value })}
@@ -248,6 +399,7 @@ export default function CreateWedding() {
                     required
                     type="date"
                     min={today}
+                    value={formData.date}
                     className="w-full border-b-2 border-[#f0e4dc] focus:border-[#e4a6a1] bg-transparent p-3 outline-none transition-all cursor-pointer"
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   />
@@ -257,6 +409,7 @@ export default function CreateWedding() {
                   <input
                     required
                     type="text"
+                    value={formData.location}
                     placeholder="The White Garden, Cairo"
                     className="w-full border-b-2 border-[#f0e4dc] focus:border-[#e4a6a1] bg-transparent p-3 outline-none transition-all placeholder:text-stone-300"
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
@@ -314,6 +467,7 @@ export default function CreateWedding() {
                 <label className="text-[10px] uppercase tracking-widest font-bold text-[#8a6b52] ml-1">Special Message (Optional)</label>
                 <textarea
                   rows={3}
+                  value={formData.message}
                   placeholder="e.g. We can't wait to celebrate with you!"
                   className="w-full border-b-2 border-[#f0e4dc] focus:border-[#e4a6a1] bg-transparent p-3 outline-none transition-all placeholder:text-stone-300 font-serif text-lg resize-none"
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -462,18 +616,50 @@ export default function CreateWedding() {
             <motion.div variants={itemVariants} className="space-y-6">
               <h3 className="font-serif text-lg italic text-[#8a4b3b]">The Portraits</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className={`p-4 border-2 border-dashed rounded-3xl transition-all text-center ${brideImage ? 'border-[#e4a6a1] bg-pink-50/30' : 'border-[#f0e4dc]'}`}>
-                  <label className="cursor-pointer block">
-                    <p className="text-[10px] font-bold uppercase mb-2 text-[#8a6b52]">{brideImage ? '✓ Bride Selected' : 'Upload Bride'}</p>
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setBrideImage(e.target.files ? e.target.files[0] : null)} />
-                    <div className="text-xs text-stone-400 font-serif">Click to choose</div>
+                <div className={`p-4 border-2 border-dashed rounded-3xl transition-all text-center ${(brideImage || existingImages.bride) ? 'border-[#e4a6a1] bg-pink-50/30' : 'border-[#f0e4dc]'}`}>
+                  <label className="cursor-pointer block relative">
+                    {(brideImage || existingImages.bride) && (
+                      <div className="w-full aspect-square rounded-2xl overflow-hidden mb-3 border border-pink-100/50 shadow-sm relative group">
+                        <img src={brideImage ? URL.createObjectURL(brideImage) : existingImages.bride} alt="Bride" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-white text-xs font-bold uppercase tracking-wider">Change</span>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-[10px] font-bold uppercase mb-2 text-[#8a6b52]">{brideImage ? '✓ Bride Selected' : existingImages.bride ? '✓ Existing Image' : 'Upload Bride'}</p>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const file = e.target.files ? e.target.files[0] : null;
+                      if (file && file.size > 5 * 1024 * 1024) {
+                        alert('Image size should be max 5 MB');
+                        e.target.value = '';
+                        return;
+                      }
+                      setBrideImage(file);
+                    }} />
+                    <div className="text-xs text-stone-400 font-serif">Click to choose (Max 5MB)</div>
                   </label>
                 </div>
-                <div className={`p-4 border-2 border-dashed rounded-3xl transition-all text-center ${groomImage ? 'border-[#e4a6a1] bg-pink-50/30' : 'border-[#f0e4dc]'}`}>
-                  <label className="cursor-pointer block">
-                    <p className="text-[10px] font-bold uppercase mb-2 text-[#8a6b52]">{groomImage ? '✓ Groom Selected' : 'Upload Groom'}</p>
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setGroomImage(e.target.files ? e.target.files[0] : null)} />
-                    <div className="text-xs text-stone-400 font-serif">Click to choose</div>
+                <div className={`p-4 border-2 border-dashed rounded-3xl transition-all text-center ${(groomImage || existingImages.groom) ? 'border-[#e4a6a1] bg-pink-50/30' : 'border-[#f0e4dc]'}`}>
+                  <label className="cursor-pointer block relative">
+                    {(groomImage || existingImages.groom) && (
+                      <div className="w-full aspect-square rounded-2xl overflow-hidden mb-3 border border-pink-100/50 shadow-sm relative group">
+                        <img src={groomImage ? URL.createObjectURL(groomImage) : existingImages.groom} alt="Groom" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-white text-xs font-bold uppercase tracking-wider">Change</span>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-[10px] font-bold uppercase mb-2 text-[#8a6b52]">{groomImage ? '✓ Groom Selected' : existingImages.groom ? '✓ Existing Image' : 'Upload Groom'}</p>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const file = e.target.files ? e.target.files[0] : null;
+                      if (file && file.size > 5 * 1024 * 1024) {
+                        alert('Image size should be max 5 MB');
+                        e.target.value = '';
+                        return;
+                      }
+                      setGroomImage(file);
+                    }} />
+                    <div className="text-xs text-stone-400 font-serif">Click to choose (Max 5MB)</div>
                   </label>
                 </div>
               </div>
@@ -499,7 +685,7 @@ export default function CreateWedding() {
                       Crafting...
                     </motion.div>
                   ) : (
-                    <motion.span key="normal">Publish Invitation</motion.span>
+                    <motion.span key="normal">{editingSlug ? 'Update Invitation' : 'Publish Invitation'}</motion.span>
                   )}
                 </AnimatePresence>
               </button>

@@ -1,5 +1,6 @@
 /* app/globals.css */
 @import "tailwindcss";
+@source "../app";
 
 /* If your template uses standard Tailwind v3 syntax instead of v4, it will look like this instead: */
 /* 
