@@ -5,6 +5,14 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { useEffect, useState } from 'react';
 import { ThemeConfig } from '@/app/constants/themes';
 
+import HeroSection from './components/HeroSection';
+import WelcomeSection from './components/WelcomeSection';
+import CalendarSection from './components/CalendarSection';
+import LocationSection from './components/LocationSection';
+import DressCodeSection from './components/DressCodeSection';
+import RsvpSection from './components/RsvpSection';
+import CreatorDashboard from './components/CreatorDashboard';
+
 interface Props {
   wedding: any;
   theme: ThemeConfig;
@@ -27,7 +35,6 @@ const yearToWords = (year: number) => {
     2038: "two thousand thirty-eight",
     2039: "two thousand thirty-nine",
     2040: "two thousand forty",
-
   };
   return years[year] || year.toString();
 };
@@ -40,7 +47,160 @@ const PARTICLE_TEMPLATES = [
   { type: 'sparkle', color: 'bg-yellow-400' },
 ];
 
+const TRANSLATIONS = {
+  en: {
+    // Hero
+    typeWedding: "Wedding Celebration",
+    typeEngagement: "Engagement Celebration",
+    letsGetMarried: "Let's Get Married",
+    letsGetEngaged: "Let's Get Engaged",
+    days: "Days",
+    hours: "Hours",
+    mins: "Mins",
+    // Welcome
+    dearGuests: "Dear Guests!",
+    defaultWeddingMsg: "Something wonderful is about to happen in our lives. We would be so happy to share this special day with the people who matter most to us — our family and dearest friends. Please join us as we celebrate the beginning of our forever.",
+    defaultEngagementMsg: "We are thrilled to announce our engagement! Please join us for a celebration of love, laughter, and our new chapter together. We can't wait to share this beautiful milestone with our dearest friends and family.",
+    quote1: "\"Two souls, one heart — forever entwined.\"",
+    // Calendar
+    saveTheDate: "Save The Date",
+    quote2: "\"And in the end, the love you take is equal to the love you make.\"",
+    // Location
+    location: "Location",
+    venueDesc: "قاعة أنيقة محاطة بأجواء ساحرة ودافئة، في قلب المدينة.",
+    viewOnMap: "View on Map",
+    quote3: "\"Wherever you go, go with all your heart.\"",
+    // Dress Code
+    dressCode: "Dress Code",
+    dressCodeDesc: "We would love it if you wore these colors to our special day!",
+    quote4: "\"Love is composed of a single soul inhabiting two bodies.\"",
+    // RSVP
+    rsvp: "RSVP",
+    kindlyReply: "Kindly reply by",
+    willYouAttend: "Will you attend?",
+    happilyAttend: "Happily Accept",
+    regretfullyDecline: "Regretfully Decline",
+    yourName: "Your Name",
+    guestFullName: "Enter your full name",
+    guestsCount: "Number of Guests",
+    guest: "Guest",
+    guests: "Guests",
+    messageToCouple: "Message to the Couple",
+    messagePlaceholder: "Share your wishes, notes, or dietary needs...",
+    submitRsvp: "Send Response",
+    thankYou: "Thank You!",
+    rsvpReceived: "Your response has been received. We look forward to celebrating with you!",
+    editResponse: "Edit Response",
+    // Creator Dashboard
+    creatorAccess: "Creator Access",
+    rsvpDashboard: "RSVP Dashboard",
+    realtimeStats: "Real-time guest responses",
+    refreshList: "Refresh",
+    responses: "Responses",
+    attending: "Attending",
+    declined: "Declined",
+    totalGuests: "Total Guests",
+    guestName: "Guest Name",
+    status: "Status",
+    count: "Count",
+    messageNotes: "Message",
+    rsvpDate: "Date",
+    loadingGuests: "Loading guests...",
+    noResponses: "No responses yet. Share your invitation link!",
+    // Outro
+    withLove: "With Love",
+    shareInvitation: "Share Invitation",
+    copied: "Link Copied!",
+    wantInvitation: "Want an invitation like this?",
+    createYourOwn: "Create Your Own",
+    tapToOpen: "Tap to open",
+  },
+  ar: {
+    // Hero
+    typeWedding: "حفل زفاف سعيد",
+    typeEngagement: "حفل خطوبة مبارك",
+    letsGetMarried: "فرحة زفافنا",
+    letsGetEngaged: "فرحة خطوبتنا",
+    days: "يوم",
+    hours: "ساعة",
+    mins: "دقيقة",
+    // Welcome
+    dearGuests: "أعزاءنا الكرام",
+    defaultWeddingMsg: "بكل فرح وسرور، نتشرف بدعوتكم لمشاركتنا أسعد لحظات حياتنا. حضوركم يُتمّم فرحتنا ويُزيّن يومنا بأجمل البسمات. ننتظركم بشوق لنحتفل معاً ببداية حياتنا الجديدة.",
+    defaultEngagementMsg: "يسعدنا ويشرّفنا أن ندعوكم لمشاركتنا فرحة خطوبتنا! لحظة مميزة نودّ أن نعيشها بجوار أحبائنا وأعز الناس على قلوبنا. حضوركم يُكمل فرحتنا.",
+    quote1: "\"روحان التقتا... فكان الحب أجمل من كل الحكايات\"",
+    // Calendar
+    saveTheDate: "احفظوا الموعد",
+    quote2: "\"وفي قلبي نبتت حديقة حين أحببتك\"",
+    // Location
+    location: "مكان الحفل",
+    venueDesc: "قاعة أنيقة محاطة بأجواء ساحرة ودافئة، في قلب المدينة.",
+    viewOnMap: "عرض الموقع على الخريطة",
+    quote3: "\"حيثما ذهبت، اذهب بكل قلبك\"",
+    // Dress Code
+    dressCode: "ألوان الزفاف",
+    dressCodeDesc: "يسعدنا أن يكون لباسكم بهذه الألوان في يومنا المميز",
+    quote4: "\"الحب يجمع روحين في جسد واحد\"",
+    // RSVP
+    rsvp: "تأكيد الحضور",
+    kindlyReply: "يرجى الرد قبل تاريخ",
+    willYouAttend: "هل ستحضرون؟",
+    happilyAttend: "بكل سرور، سأحضر",
+    regretfullyDecline: "أعتذر عن الحضور",
+    yourName: "الاسم",
+    guestFullName: "أدخل اسمك الكامل",
+    guestsCount: "عدد المرافقين",
+    guest: "ضيف",
+    guests: "ضيوف",
+    messageToCouple: "رسالة للعروسين",
+    messagePlaceholder: "شاركنا تهانيك أو ملاحظاتك...",
+    submitRsvp: "إرسال الرد",
+    thankYou: "شكراً جزيلاً!",
+    rsvpReceived: "تم استلام ردك بنجاح. نتطلع للاحتفال معكم!",
+    editResponse: "تعديل الرد",
+    // Creator Dashboard
+    creatorAccess: "لوحة المنشئ",
+    rsvpDashboard: "لوحة تأكيد الحضور",
+    realtimeStats: "ردود الضيوف المباشرة",
+    refreshList: "تحديث",
+    responses: "الردود",
+    attending: "حاضر",
+    declined: "معتذر",
+    totalGuests: "إجمالي الضيوف",
+    guestName: "اسم الضيف",
+    status: "الحالة",
+    count: "العدد",
+    messageNotes: "الرسالة",
+    rsvpDate: "التاريخ",
+    loadingGuests: "جاري تحميل الضيوف...",
+    noResponses: "لا توجد ردود بعد. شارك رابط الدعوة!",
+    // Outro
+    withLove: "مع خالص الحب",
+    shareInvitation: "مشاركة الدعوة",
+    copied: "تم نسخ الرابط!",
+    wantInvitation: "تريد دعوة مثل هذه؟",
+    createYourOwn: "أنشئ دعوتك الخاصة",
+    tapToOpen: "انقر للفتح",
+  }
+};
+
 export default function AnimatedInvitation({ wedding, theme }: Props) {
+  const [lang, setLang] = useState<'en' | 'ar'>('en');
+  const isAr = lang === 'ar';
+  const dir: 'ltr' | 'rtl' = isAr ? 'rtl' : 'ltr';
+  const fontTitle = isAr ? 'font-cairo' : theme.fontTitle;
+  const fontBody = isAr ? 'font-tajawal' : theme.fontBody;
+  const t = TRANSLATIONS[lang];
+
+  const langConfig = {
+    lang,
+    isAr,
+    dir,
+    fontTitle,
+    fontBody,
+    t
+  };
+
   const [themeKey, animationStyle] = (wedding.theme || '').split(':');
   const activeAnimation = animationStyle || 'envelope';
 
@@ -94,6 +254,124 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
     setTimeout(() => {
       setShowContent(true);
     }, 2400);
+  };
+
+  // RSVP & Creator state management
+  const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
+  const [rsvpAttending, setRsvpAttending] = useState<boolean | null>(null);
+  const [rsvpName, setRsvpName] = useState('');
+  const [rsvpGuestsCount, setRsvpGuestsCount] = useState(1);
+  const [rsvpNotes, setRsvpNotes] = useState('');
+  const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [rsvpError, setRsvpError] = useState('');
+
+  // Creator state
+  const [isCreator, setIsCreator] = useState(false);
+  const [rsvps, setRsvps] = useState<any[]>([]);
+  const [rsvpsLoading, setRsvpsLoading] = useState(false);
+
+  // Check creator mode — the create page stores the edit token under this key
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const editToken = localStorage.getItem(`wedding_edit_${wedding.slug}`);
+      if (editToken) {
+        setIsCreator(true);
+      }
+    }
+  }, [wedding.slug]);
+
+  // Check if user already submitted RSVP (localStorage persistence)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`rsvp_submitted_${wedding.slug}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setRsvpSubmitted(true);
+          setRsvpName(parsed.name || '');
+          setRsvpAttending(parsed.attending ?? null);
+          setRsvpGuestsCount(parsed.guests_count || 1);
+          setRsvpNotes(parsed.notes || '');
+        } catch {
+          setRsvpSubmitted(true);
+        }
+      }
+    }
+  }, [wedding.slug]);
+
+  // Auto-fetch RSVPs when creator mode is detected
+  useEffect(() => {
+    if (isCreator) {
+      fetchRsvps();
+    }
+  }, [isCreator]);
+
+  // Fetch RSVPs
+  const fetchRsvps = async () => {
+    setRsvpsLoading(true);
+    try {
+      const res = await fetch(`/api/rsvp?slug=${wedding.slug}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRsvps(data.rsvps || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch RSVPs:', err);
+    } finally {
+      setRsvpsLoading(false);
+    }
+  };
+
+  // Submit RSVP
+  const handleRsvpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (rsvpAttending === null) {
+      setRsvpError(lang === 'en' ? 'Please select if you are attending or not' : 'يرجى تحديد ما إذا كنت ستحضر أم لا');
+      return;
+    }
+    if (!rsvpName.trim()) {
+      setRsvpError(lang === 'en' ? 'Please enter your name' : 'يرجى إدخال اسمك');
+      return;
+    }
+
+    setRsvpLoading(true);
+    setRsvpError('');
+
+    try {
+      const res = await fetch('/api/rsvp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wedding_slug: wedding.slug,
+          name: rsvpName,
+          attending: rsvpAttending,
+          guests_count: rsvpAttending ? rsvpGuestsCount : 0,
+          notes: rsvpNotes,
+        }),
+      });
+
+      if (res.ok) {
+        setRsvpSubmitted(true);
+        // Save to localStorage so user doesn't see form again
+        localStorage.setItem(`rsvp_submitted_${wedding.slug}`, JSON.stringify({
+          name: rsvpName,
+          attending: rsvpAttending,
+          guests_count: rsvpAttending ? rsvpGuestsCount : 0,
+          notes: rsvpNotes,
+        }));
+        // Re-fetch RSVPs so creator dashboard updates
+        if (isCreator) {
+          fetchRsvps();
+        }
+      } else {
+        const data = await res.json();
+        setRsvpError(data.error || (lang === 'en' ? 'Failed to submit RSVP' : 'فشل في إرسال تأكيد الحضور'));
+      }
+    } catch (err) {
+      setRsvpError(lang === 'en' ? 'An error occurred. Please try again.' : 'حدث خطأ. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setRsvpLoading(false);
+    }
   };
 
   const { scrollYProgress } = useScroll();
@@ -759,9 +1037,9 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
             <motion.p 
               animate={{ opacity: envelopeOpen ? 0 : 1 }}
               transition={{ duration: 0.3 }}
-              className={`mt-16 text-xs sm:text-sm tracking-[0.3em] uppercase opacity-60 ${theme.fontBody}`}
+              className={`mt-16 text-xs sm:text-sm tracking-[0.3em] uppercase opacity-60 ${fontBody}`}
             >
-              Tap to open
+              {t.tapToOpen}
             </motion.p>
           </motion.main>
         ) : (
@@ -772,286 +1050,147 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
             transition={{ duration: 1.5, ease: "easeOut" }}
             className={`w-full min-h-screen ${theme.bg} ${theme.text} font-sans overflow-x-hidden transition-colors duration-500`}
           >
-
-      {/* 1. HERO SECTION (Polaroids & Title) */}
-      <section className="pt-20 pb-12 px-6 flex flex-col items-center text-center relative max-w-4xl mx-auto">
-        <div className={`absolute top-10 right-6 opacity-40 ${theme.accent}`}>
-          <svg width="48" height="32" viewBox="0 0 64 40" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="24" cy="20" r="16" />
-            <circle cx="40" cy="20" r="16" />
-          </svg>
-        </div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}
-          className={`text-5xl sm:text-7xl font-black ${theme.fontTitle} tracking-tight uppercase leading-none mb-12`}
-        >
-          Let's Get<br/>{wedding.type === 'engagement' ? 'Engaged' : 'Married'}
-        </motion.h1>
-
-        <div className="flex justify-center gap-4 sm:gap-12 w-full mt-4">
-          {/* Bride Polaroid */}
-          <motion.div initial={{ opacity: 0, rotate: -10, x: -20 }} animate={{ opacity: 1, rotate: -4, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="flex flex-col items-center">
-            <p className={`text-2xl sm:text-3xl italic ${theme.fontTitle} mb-3`}>{wedding.partner_one}</p>
-            <div className={`p-2 pb-8 sm:p-3 sm:pb-12 shadow-xl rounded-sm border ${theme.border} ${theme.cardBg} w-36 sm:w-56 aspect-[3/4]`}>
-              <img
-                src={brideImg}
-                alt="Bride"
-                className={`w-full h-full object-cover rounded-sm ${!wedding.image_one_url ? 'grayscale contrast-125' : 'grayscale-[20%]'}`}
-              />
-            </div>
-          </motion.div>
-
-          {/* Groom Polaroid */}
-          <motion.div initial={{ opacity: 0, rotate: 10, x: 20 }} animate={{ opacity: 1, rotate: 4, x: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="flex flex-col items-center mt-8 sm:mt-12">
-            <p className={`text-2xl sm:text-3xl italic ${theme.fontTitle} mb-3`}>{wedding.partner_two}</p>
-            <div className={`p-2 pb-8 sm:p-3 sm:pb-12 shadow-xl rounded-sm border ${theme.border} ${theme.cardBg} w-36 sm:w-56 aspect-[3/4]`}>
-              <img
-                src={groomImg}
-                alt="Groom"
-                className={`w-full h-full object-cover rounded-sm ${!wedding.image_two_url ? 'grayscale contrast-125' : 'grayscale-[20%]'}`}
-              />
-            </div>
-          </motion.div>
-        </div>
-
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className={`mt-16 text-3xl sm:text-4xl ${theme.fontTitle}`}>
-          {wedding.partner_one} <span className={`px-2 ${theme.accent}`}>&</span> {wedding.partner_two}
-        </motion.p>
-
-        {/* Countdown Timer */}
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-          className={`flex justify-center gap-6 sm:gap-12 text-center mt-12 border-y py-6 border-opacity-20 max-w-xl mx-auto w-full ${theme.border}`}
-        >
-          {['Days', 'Hours', 'Mins'].map((unit, i) => (
-            <div key={unit}>
-              <p className={`text-3xl sm:text-5xl font-light ${theme.fontTitle}`}>
-                {i === 0 ? timeLeft.days : i === 1 ? timeLeft.hours : timeLeft.minutes}
-              </p>
-              <p className={`text-xs uppercase tracking-widest opacity-60 mt-2 ${theme.fontBody}`}>{unit}</p>
-            </div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* 2. WELCOME MESSAGE */}
-      <section className="py-16 px-6 max-w-2xl mx-auto text-center">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.8 }}>
-          <h2 className={`text-5xl sm:text-6xl mb-6 italic ${theme.fontTitle}`}>Dear Guests!</h2>
-          <div className={`flex justify-center mb-8 opacity-60 ${theme.accent}`}>
-            <svg width="32" height="20" viewBox="0 0 64 40" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="24" cy="20" r="16" />
-              <circle cx="40" cy="20" r="16" />
-            </svg>
-          </div>
-          <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 whitespace-pre-wrap ${theme.fontBody}`}>
-            {wedding.message ? (
-              wedding.message
-            ) : wedding.type === 'engagement' ? (
-              "We are thrilled to announce our engagement! Please join us for a celebration of love, laughter, and our new chapter together. We can't wait to share this beautiful milestone with our dearest friends and family."
-            ) : (
-              "Something wonderful is about to happen in our lives. We would be so happy to share this special day with the people who matter most to us — our family and dearest friends. Please join us as we celebrate the beginning of our forever."
-            )}
-          </p>
-        </motion.div>
-      </section>
-
-      {/* 3. CALENDAR */}
-      <section className="py-16 px-6 relative max-w-3xl mx-auto text-center">
-        <span className={`absolute top-10 left-10 text-2xl ${theme.accent}`}>✦</span>
-        <span className={`absolute bottom-20 right-10 text-xl ${theme.accent}`}>✦</span>
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-          <h2 className={`text-6xl sm:text-8xl tracking-widest uppercase font-black ${theme.fontTitle}`}>{monthName}</h2>
-          <p className={`text-xl sm:text-2xl mt-4 italic ${theme.fontTitle} opacity-80`}>{yearText}</p>
-          <div className={`flex justify-center items-center gap-4 sm:gap-8 my-16 text-3xl sm:text-5xl font-black ${theme.fontTitle}`}>
-            {daysAround.map((d, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={d.isTarget ? "relative flex items-center justify-center scale-125 mx-2" : "opacity-70"}
+            {/* Language Switcher Button */}
+            <div className="fixed top-6 right-6 z-[60]">
+              <button
+                onClick={() => setLang(l => l === 'en' ? 'ar' : 'en')}
+                className="px-4 py-2 rounded-full backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 text-xs font-semibold tracking-wider uppercase border-current/20 hover:border-current/40 bg-white/10 dark:bg-black/10 font-sans"
               >
-                {d.isTarget ? (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="currentColor" className={`w-16 h-16 sm:w-20 sm:h-20 drop-shadow-md ${theme.accent}`}>
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                    <span className="absolute text-white mix-blend-difference text-xl sm:text-2xl z-10 font-bold">{d.dayNum}</span>
-                  </>
-                ) : (
-                  <span>{d.dayNum}</span>
-                )}
+                {lang === 'en' ? 'العربية' : 'English'}
+              </button>
+            </div>
+
+            {/* Injected Font Stylesheet for Arabic */}
+            <style dangerouslySetInnerHTML={{ __html: `
+              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;900&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+              .font-cairo {
+                font-family: 'Cairo', sans-serif !important;
+              }
+              .font-tajawal {
+                font-family: 'Tajawal', sans-serif !important;
+              }
+              .font-amiri {
+                font-family: 'Amiri', serif !important;
+              }
+            ` }} />
+
+            <HeroSection
+              wedding={wedding}
+              theme={theme}
+              timeLeft={timeLeft}
+              brideImg={brideImg}
+              groomImg={groomImg}
+              langConfig={langConfig}
+            />
+
+            <WelcomeSection
+              wedding={wedding}
+              theme={theme}
+              langConfig={langConfig}
+            />
+
+            <CalendarSection
+              theme={theme}
+              monthName={monthName}
+              yearText={yearText}
+              daysAround={daysAround}
+              dayName={dayName}
+              weddingDate={weddingDate}
+              langConfig={langConfig}
+            />
+
+            <LocationSection
+              wedding={wedding}
+              theme={theme}
+              langConfig={langConfig}
+            />
+
+            <DressCodeSection
+              wedding={wedding}
+              theme={theme}
+              langConfig={langConfig}
+            />
+
+            <RsvpSection
+              wedding={wedding}
+              theme={theme}
+              rsvpSubmitted={rsvpSubmitted}
+              setRsvpSubmitted={setRsvpSubmitted}
+              rsvpAttending={rsvpAttending}
+              setRsvpAttending={setRsvpAttending}
+              rsvpName={rsvpName}
+              setRsvpName={setRsvpName}
+              rsvpGuestsCount={rsvpGuestsCount}
+              setRsvpGuestsCount={setRsvpGuestsCount}
+              rsvpNotes={rsvpNotes}
+              setRsvpNotes={setRsvpNotes}
+              rsvpLoading={rsvpLoading}
+              rsvpError={rsvpError}
+              handleRsvpSubmit={handleRsvpSubmit}
+              langConfig={langConfig}
+            />
+
+            <CreatorDashboard
+              isCreator={isCreator}
+              theme={theme}
+              rsvps={rsvps}
+              rsvpsLoading={rsvpsLoading}
+              fetchRsvps={fetchRsvps}
+              langConfig={langConfig}
+            />
+
+            {/* 5. OUTRO */}
+            <section dir={dir} className="py-20 px-6 max-w-xl mx-auto text-center">
+              <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                <div className={`flex justify-center mb-8 opacity-60 ${theme.accent}`}>
+                  <svg width="40" height="24" viewBox="0 0 64 40" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="24" cy="20" r="16" /><circle cx="40" cy="20" r="16" />
+                  </svg>
+                </div>
+                <p className={`text-3xl mb-6 italic ${fontTitle}`}>{t.withLove}</p>
+                <h2 className={`text-6xl sm:text-8xl tracking-widest font-black drop-shadow-sm mb-12 ${fontTitle}`}>
+                  {wedding.partner_one} <span className="text-5xl">{isAr ? "و" : "&"}</span> {wedding.partner_two}
+                </h2>
+                <p className={`text-sm tracking-[0.2em] uppercase opacity-60 mb-12 ${fontBody}`}>
+                  {weddingDate.toLocaleDateString('en-GB').replace(/\//g, ' • ')} — {wedding.location}
+                </p>
+
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className={`px-8 py-3 rounded-full border border-current hover:opacity-70 transition-opacity tracking-[0.1em] uppercase text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 mx-auto ${theme.fontBody}`}
+                >
+                  {copied ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {t.copied}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                      {t.shareInvitation}
+                    </>
+                  )}
+                </button>
+
+                <div className="mt-16 pt-8 border-t border-current border-opacity-10 max-w-xs mx-auto">
+                  <p className={`text-xs uppercase tracking-widest opacity-50 mb-4 ${theme.fontBody}`}>{t.wantInvitation}</p>
+                  <a 
+                    href="/" 
+                    className={`inline-block px-8 py-3 rounded-full border border-current hover:opacity-70 transition-opacity tracking-[0.1em] uppercase text-xs sm:text-sm shadow-sm ${theme.fontBody}`}
+                  >
+                    {t.createYourOwn}
+                  </a>
+                </div>
               </motion.div>
-            ))}
-          </div>
-          <p className={`text-2xl sm:text-3xl italic ${theme.fontTitle}`}>{dayName}, {monthName} {weddingDate.getDate()}, {weddingDate.getFullYear()}</p>
-        </motion.div>
-      </section>
-
-      {/* 4. LOCATION */}
-      <section className="py-16 px-6 max-w-2xl mx-auto text-center">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <h2 className={`text-5xl sm:text-7xl tracking-wide uppercase font-black mb-6 ${theme.fontTitle}`}>Location</h2>
-          <p className={`text-3xl mb-6 italic ${theme.fontTitle}`}>{wedding.location}</p>
-          <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 mb-8 ${theme.fontBody}`}>
-            An open-air {wedding.type === 'engagement' ? 'engagement' : 'wedding'} venue tucked among olive trees and warm string lights, just outside the heart of {wedding.location}.
-          </p>
-
-          {wedding.location_url && (
-            <div className="mb-10">
-              <a 
-                href={wedding.location_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className={`inline-flex items-center gap-2 px-8 py-4 rounded-full border-2 transition-all hover:scale-105 tracking-[0.1em] uppercase text-xs sm:text-sm shadow-xl font-bold bg-white text-stone-800 border-transparent hover:shadow-2xl`}
-              >
-                <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                View on Map
-              </a>
-            </div>
-          )}
-
-          {wedding.location_url && (
-            <div className="w-full aspect-[4/3] sm:aspect-video rounded-3xl overflow-hidden shadow-2xl relative bg-stone-200">
-              <iframe 
-                src={(() => {
-                  let q = wedding.location;
-                  let ftid = '';
-                  const resolvedUrl = wedding.resolved_location_url || wedding.location_url;
-                  
-                  if (resolvedUrl) {
-                    // Extract ftid (Feature ID) if present in the URL
-                    const ftidMatch = resolvedUrl.match(/[?&]ftid=([^&]+)/);
-                    if (ftidMatch && ftidMatch[1]) {
-                      try {
-                        ftid = decodeURIComponent(ftidMatch[1]);
-                      } catch {
-                        ftid = ftidMatch[1];
-                      }
-                    }
-
-                    if (resolvedUrl.includes('query=')) {
-                      const m = resolvedUrl.match(/query=([^&]+)/);
-                      if (m && m[1]) {
-                        try {
-                          q = decodeURIComponent(m[1]);
-                        } catch {
-                          q = m[1];
-                        }
-                      }
-                    } else if (resolvedUrl.includes('q=')) {
-                      const m = resolvedUrl.match(/q=([^&]+)/);
-                      if (m && m[1]) {
-                        try {
-                          q = decodeURIComponent(m[1]);
-                        } catch {
-                          q = m[1];
-                        }
-                      }
-                    } else {
-                      // Extract coordinates from @lat,lng pattern if present
-                      const atCoordMatch = resolvedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-                      if (atCoordMatch) {
-                        q = `${atCoordMatch[1]},${atCoordMatch[2]}`;
-                      } else {
-                        // If it's a general URL and no coordinates found, fallback to location name
-                        q = wedding.location;
-                      }
-                    }
-                  }
-
-                  let embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
-                  if (ftid) {
-                    embedUrl += `&ftid=${ftid}`;
-                  }
-                  return embedUrl;
-                })()}
-                className="w-full h-full border-0 grayscale-[20%]"
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
-              <div className={`absolute inset-0 ${theme.bg} mix-blend-overlay opacity-30 pointer-events-none`}></div>
-            </div>
-          )}
-        </motion.div>
-      </section>
-
-      {/* 4.5 DRESS CODE */}
-      {wedding.dress_code && wedding.dress_code.length > 0 && (
-      <section className="py-16 px-6 max-w-2xl mx-auto text-center">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <h2 className={`text-4xl sm:text-6xl tracking-wide uppercase font-black mb-6 ${theme.fontTitle}`}>Dress Code</h2>
-          <p className={`text-lg sm:text-xl leading-relaxed opacity-90 px-4 mb-8 ${theme.fontBody}`}>
-            We would love it if you wore these colors to our special day!
-          </p>
-          <div className="flex justify-center gap-4 flex-wrap">
-            {wedding.dress_code.map((color: string, i: number) => (
-              <div key={i} className="w-12 h-12 sm:w-16 sm:h-16 rounded-full shadow-lg border-2 border-white/20" style={{ backgroundColor: color }}></div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
-      )}
-
-      {/* 5. OUTRO */}
-      <section className="py-20 px-6 max-w-xl mx-auto text-center">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <div className={`flex justify-center mb-8 opacity-60 ${theme.accent}`}>
-            <svg width="40" height="24" viewBox="0 0 64 40" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="24" cy="20" r="16" /><circle cx="40" cy="20" r="16" />
-            </svg>
-          </div>
-          <p className={`text-3xl mb-6 italic ${theme.fontTitle}`}>With love,</p>
-          <h2 className={`text-6xl sm:text-8xl tracking-widest font-black drop-shadow-sm mb-12 ${theme.fontTitle}`}>
-            {wedding.partner_one} <span className="text-5xl">&</span> {wedding.partner_two}
-          </h2>
-          <p className={`text-sm tracking-[0.2em] uppercase opacity-60 mb-12 ${theme.fontBody}`}>
-            {weddingDate.toLocaleDateString('en-GB').replace(/\//g, ' • ')} — {wedding.location}
-          </p>
-
-          <button 
-            onClick={() => {
-              navigator.clipboard.writeText(window.location.href);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-            className={`px-8 py-3 rounded-full border border-current hover:opacity-70 transition-opacity tracking-[0.1em] uppercase text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 mx-auto ${theme.fontBody}`}
-          >
-            {copied ? (
-              <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Link Copied!
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                Share Invitation
-              </>
-            )}
-          </button>
-
-          <div className="mt-16 pt-8 border-t border-current border-opacity-10 max-w-xs mx-auto">
-            <p className={`text-xs uppercase tracking-widest opacity-50 mb-4 ${theme.fontBody}`}>Want an invitation like this?</p>
-            <a 
-              href="/" 
-              className={`inline-block px-8 py-3 rounded-full border border-current hover:opacity-70 transition-opacity tracking-[0.1em] uppercase text-xs sm:text-sm shadow-sm ${theme.fontBody}`}
-            >
-              Create Your Own
-            </a>
-          </div>
-        </motion.div>
-      </section>
+            </section>
           </motion.main>
         )}
       </AnimatePresence>

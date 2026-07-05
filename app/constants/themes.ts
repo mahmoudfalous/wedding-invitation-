@@ -90,5 +90,32 @@ export const WEDDING_THEMES: Record<string, ThemeConfig> = {
     fontBody: "font-serif",
     border: "border-slate-800",
     cardBg: "bg-slate-900"
+  },
+  celestial: {
+    bg: "bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950 via-slate-950 to-black",
+    text: "text-slate-100",
+    accent: "text-amber-300",
+    fontTitle: "font-serif tracking-[0.2em] uppercase font-light",
+    fontBody: "font-sans font-light tracking-wide",
+    border: "border-indigo-900/50",
+    cardBg: "bg-slate-900/60 backdrop-blur-md"
+  },
+  lavender: {
+    bg: "bg-[#f5f2f8]",
+    text: "text-[#3b2a50]",
+    accent: "text-[#8a72ac]",
+    fontTitle: "font-serif tracking-wide italic",
+    fontBody: "font-sans font-light",
+    border: "border-[#e5ddec]",
+    cardBg: "bg-white/80 backdrop-blur-sm"
+  },
+  artdecogold: {
+    bg: "bg-[#111111]",
+    text: "text-[#eae3d2]",
+    accent: "text-[#d4af37]",
+    fontTitle: "font-serif tracking-[0.15em] uppercase font-bold",
+    fontBody: "font-serif font-light",
+    border: "border-[#d4af37]/30",
+    cardBg: "bg-[#1c1c1c]/90 border border-[#d4af37]/20"
   }
 };

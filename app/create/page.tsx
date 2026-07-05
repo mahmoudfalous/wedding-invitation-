@@ -517,6 +517,8 @@ export default function CreateWedding() {
                   { key: 'curtain', label: 'Velvet Curtains', icon: '🎭' },
                   { key: 'scroll', label: 'Vintage Scroll', icon: '📜' },
                   { key: 'rose', label: 'Blooming Rose', icon: '🌸' },
+                  { key: 'waxSeal', label: 'Wax Seal Letter', icon: '🏷️' },
+                  { key: 'ribbon', label: 'Silk Ribbon Bow', icon: '🎀' },
                 ].map((anim) => (
                   <motion.button
                     key={anim.key}

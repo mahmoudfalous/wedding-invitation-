@@ -1,11 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 async function run() {
-  const { data, error } = await supabase.from('weddings').select('*').limit(1);
-  console.log('Data:', data);
-  console.log('Error:', error);
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`;
+  const headers = {
+    'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+  };
+  try {
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    console.log('Available tables/paths:', Object.keys(data.paths || {}));
+  } catch (err) {
+    console.error('Error fetching schema:', err);
+  }
 }
 run();
