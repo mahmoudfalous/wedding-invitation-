@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { data: wedding } = await supabase
     .from('weddings')
-    .select('partner_one, partner_two, wedding_date, location, image_one_url, type')
+    .select('partner_one, partner_two, wedding_date, location, image_one_url, card_image_url, type')
     .eq('slug', resolvedParams.slug)
     .single();
 
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     month: 'long', day: 'numeric', year: 'numeric'
   });
   
-  const ogImage = wedding.image_one_url || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1200&auto=format&fit=crop';
+  const ogImage = wedding.card_image_url || wedding.image_one_url || 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1200&auto=format&fit=crop';
   const eventType = wedding.type === 'engagement' ? 'Engagement' : 'Wedding';
 
   return {

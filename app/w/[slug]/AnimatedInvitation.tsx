@@ -2,8 +2,10 @@
 'use client';
 
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ThemeConfig } from '@/app/constants/themes';
+import { toPng } from 'html-to-image';
+import InvitationCard from '@/app/components/InvitationCard';
 
 import HeroSection from './components/HeroSection';
 import WelcomeSection from './components/WelcomeSection';
@@ -186,6 +188,7 @@ const TRANSLATIONS = {
 
 export default function AnimatedInvitation({ wedding, theme }: Props) {
   const [lang, setLang] = useState<'en' | 'ar'>('en');
+  const cardRef = useRef<HTMLDivElement>(null);
   const isAr = lang === 'ar';
   const dir: 'ltr' | 'rtl' = isAr ? 'rtl' : 'ltr';
   const fontTitle = isAr ? 'font-cairo' : theme.fontTitle;
@@ -269,6 +272,27 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
   const [isCreator, setIsCreator] = useState(false);
   const [rsvps, setRsvps] = useState<any[]>([]);
   const [rsvpsLoading, setRsvpsLoading] = useState(false);
+
+  const handleDownloadCard = async () => {
+    const filename = `${wedding.partner_one || 'Wedding'}_${wedding.partner_two || 'Invitation'}_Card.png`;
+    
+    if (wedding.card_image_url) {
+      window.location.href = `/api/download?url=${encodeURIComponent(wedding.card_image_url)}&filename=${encodeURIComponent(filename)}`;
+      return;
+    }
+
+    if (cardRef.current) {
+      try {
+        const dataUrl = await toPng(cardRef.current, { quality: 0.95, pixelRatio: 2 });
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = dataUrl;
+        link.click();
+      } catch (err) {
+        console.error('Card export failed:', err);
+      }
+    }
+  };
 
   // Check creator mode — the create page stores the edit token under this key
   useEffect(() => {
@@ -1051,7 +1075,18 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
             className={`w-full min-h-screen ${theme.bg} ${theme.text} font-sans overflow-x-hidden transition-colors duration-500`}
           >
             {/* Language Switcher Button */}
-            <div className="fixed top-6 right-6 z-[60]">
+            <div className="fixed top-6 right-6 z-[60] flex items-center gap-2">
+              {wedding.card_image_url && (
+                <button
+                  type="button"
+                  onClick={handleDownloadCard}
+                  title={lang === 'en' ? 'Download Invitation Card' : 'تحميل بطاقة الدعوة'}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider shadow-lg border backdrop-blur-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer ${theme.cardBg} ${theme.border} text-current hover:opacity-90`}
+                >
+                  <span>📥</span>
+                  <span className="hidden sm:inline">{lang === 'en' ? 'Card' : 'البطاقة'}</span>
+                </button>
+              )}
               <button
                 onClick={() => setLang(l => l === 'en' ? 'ar' : 'en')}
                 className="px-4 py-2 rounded-full backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 text-xs font-semibold tracking-wider uppercase border-current/20 hover:border-current/40 bg-white/10 dark:bg-black/10 font-sans"
@@ -1110,6 +1145,40 @@ export default function AnimatedInvitation({ wedding, theme }: Props) {
               theme={theme}
               langConfig={langConfig}
             />
+
+            {/* Official Theme Invitation Card & Download Section (Only if card_image_url exists) */}
+            {Boolean(wedding.card_image_url) && (
+              <section dir={dir} className="py-16 px-4 max-w-lg mx-auto text-center flex flex-col items-center">
+                <div className={`p-6 sm:p-8 rounded-3xl border-2 shadow-2xl ${theme.cardBg} ${theme.border} w-full flex flex-col items-center gap-6`}>
+                  <div className="space-y-1">
+                    <h3 className={`text-xl sm:text-2xl font-serif ${theme.fontTitle}`}>
+                      {lang === 'en' ? 'Invitation Card' : 'بطاقة الدعوة الرسمية'}
+                    </h3>
+                    <p className="text-xs sm:text-sm opacity-80 font-sans">
+                      {lang === 'en' ? 'Download your official themed invitation card.' : 'قم بتحميل بطاقة الدعوة الرسمية لحفظها أو مشاركتها.'}
+                    </p>
+                  </div>
+
+                  <div className="w-full max-w-full flex justify-center overflow-hidden py-2">
+                    {/* eslint-disable-next-html-element-suppress */}
+                    <img
+                      src={wedding.card_image_url}
+                      alt={`${wedding.partner_one} & ${wedding.partner_two} Invitation Card`}
+                      className="w-full max-w-full sm:max-w-[500px] h-auto rounded-3xl border-2 shadow-2xl object-contain transition-transform hover:scale-[1.01]"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleDownloadCard}
+                    className={`px-8 py-3.5 rounded-full font-semibold text-xs sm:text-sm tracking-wider uppercase shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-2 border cursor-pointer ${theme.cardBg} ${theme.border} text-current`}
+                  >
+                    <span className="text-lg">📥</span>
+                    <span>{lang === 'en' ? 'Download Invitation Card' : 'تحميل بطاقة الدعوة'}</span>
+                  </button>
+                </div>
+              </section>
+            )}
 
             {!isCreator && (
               <RsvpSection

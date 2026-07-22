@@ -1,11 +1,13 @@
 // app/create/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion'; // Added Framer Motion
 import { WEDDING_THEMES } from "@/app/constants/themes";
 import { supabase } from "@/app/lib/supabase";
+import { toPng } from 'html-to-image';
+import InvitationCard from '@/app/components/InvitationCard';
 import dynamic from 'next/dynamic';
 import AnimatedInvitation from "@/app/w/[slug]/AnimatedInvitation";
 
@@ -25,6 +27,39 @@ export default function CreateWedding() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadCard = async () => {
+    if (!cardRef.current) return;
+    try {
+      const dataUrl = await toPng(cardRef.current, { quality: 0.95, pixelRatio: 2 });
+      const link = document.createElement('a');
+      link.download = `${formData.brideName || 'wedding'}-${formData.groomName || 'invitation'}-card.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.warn('Initial card download failed, trying fallback:', err);
+      try {
+        const dataUrl = await toPng(cardRef.current, {
+          quality: 0.95,
+          pixelRatio: 2,
+          filter: (node) => {
+            if (node instanceof HTMLImageElement && node.src && node.src.startsWith('http') && !node.src.includes(window.location.host)) {
+              return false;
+            }
+            return true;
+          }
+        });
+        const link = document.createElement('a');
+        link.download = `${formData.brideName || 'wedding'}-${formData.groomName || 'invitation'}-card.png`;
+        link.href = dataUrl;
+        link.click();
+      } catch (fallbackErr) {
+        console.error('Failed to download card:', fallbackErr);
+      }
+    }
+  };
+
   const [brideImage, setBrideImage] = useState<File | null>(null);
   const [groomImage, setGroomImage] = useState<File | null>(null);
   const [today, setToday] = useState('');
@@ -151,7 +186,6 @@ export default function CreateWedding() {
     e.preventDefault();
     setErrorMsg('');
 
-    // Validation
     if (!formData.brideName || !formData.groomName || !formData.date || !formData.location) {
       setErrorMsg('Please fill in all required text fields.');
       return;
@@ -171,6 +205,38 @@ export default function CreateWedding() {
         if (url) groomImageUrl = url;
       }
 
+      // Generate & upload card image to Cloudflare R2
+      let cardImageUrl: string | null = null;
+      if (cardRef.current) {
+        try {
+          const dataUrl = await toPng(cardRef.current, { quality: 0.9, pixelRatio: 2, cacheBust: true });
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          const cardFile = new File([blob], `card-${Date.now()}.png`, { type: 'image/png' });
+          cardImageUrl = await uploadImage(cardFile);
+        } catch (err) {
+          console.warn('Primary card toPng failed, trying fallback without cross-origin images:', err);
+          try {
+            const dataUrl = await toPng(cardRef.current, {
+              quality: 0.9,
+              pixelRatio: 2,
+              filter: (node) => {
+                if (node instanceof HTMLImageElement && node.src && node.src.startsWith('http') && !node.src.includes(window.location.host)) {
+                  return false;
+                }
+                return true;
+              }
+            });
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            const cardFile = new File([blob], `card-${Date.now()}.png`, { type: 'image/png' });
+            cardImageUrl = await uploadImage(cardFile);
+          } catch (fallbackErr) {
+            console.error('Card image generation/upload error:', fallbackErr);
+          }
+        }
+      }
+
       if (editingSlug) {
         const token = localStorage.getItem(`wedding_edit_${editingSlug}`);
         const { error } = await supabase
@@ -184,6 +250,7 @@ export default function CreateWedding() {
             theme: `${formData.theme}:${formData.animationStyle}`,
             image_one_url: brideImageUrl,
             image_two_url: groomImageUrl,
+            card_image_url: cardImageUrl,
             type: formData.type,
             message: formData.message.trim() || null,
             dress_code: formData.dressCodeColors,
@@ -207,6 +274,7 @@ export default function CreateWedding() {
             theme: `${formData.theme}:${formData.animationStyle}`,
             image_one_url: brideImageUrl,
             image_two_url: groomImageUrl,
+            card_image_url: cardImageUrl,
             type: formData.type,
             message: formData.message.trim() || null,
             dress_code: formData.dressCodeColors,
@@ -230,7 +298,6 @@ export default function CreateWedding() {
     }
   };
 
-  // Animation Variants
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -250,7 +317,6 @@ export default function CreateWedding() {
   return (
     <main className={`min-h-screen ${activeTheme.bg} ${activeTheme.text} flex flex-col items-center justify-center p-4 md:p-8 relative transition-colors duration-700`}>
 
-      {/* Background Decorative Sparkles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div animate={{ opacity: [0.2, 0.5, 0.2], scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity }} className="absolute top-10 left-10 text-pink-200 text-6xl">✦</motion.div>
         <motion.div animate={{ opacity: [0.1, 0.4, 0.1], scale: [1, 1.2, 1] }} transition={{ duration: 6, repeat: Infinity, delay: 1 }} className="absolute bottom-20 right-10 text-pink-200 text-8xl">✦</motion.div>
@@ -327,7 +393,6 @@ export default function CreateWedding() {
               </motion.div>
             )}
 
-            {/* Section 0: Event Type */}
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#eadecc]"></span>
@@ -352,7 +417,6 @@ export default function CreateWedding() {
               </div>
             </motion.div>
 
-            {/* Section 1: Names */}
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#eadecc]"></span>
@@ -385,7 +449,6 @@ export default function CreateWedding() {
               </div>
             </motion.div>
 
-            {/* Section 2: Details */}
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#eadecc]"></span>
@@ -456,7 +519,6 @@ export default function CreateWedding() {
               </div>
             </motion.div>
 
-            {/* Section 2.5: Message */}
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#eadecc]"></span>
@@ -475,7 +537,6 @@ export default function CreateWedding() {
               </div>
             </motion.div>
 
-            {/* Section 3: Themes */}
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3 text-[#8a4b3b]">
                 <h3 className="font-serif text-lg italic">Choose Your Aesthetic</h3>
@@ -502,7 +563,39 @@ export default function CreateWedding() {
               </div>
             </motion.div>
 
-            {/* Section 3.2: Invitation Animation */}
+            {/* Invitation Card Live Preview & Download */}
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-[#f0e4dc] shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#f0e4dc] pb-4">
+                <div>
+                  <h3 className="font-serif text-lg italic text-[#8a4b3b]">Theme Invitation Card</h3>
+                  <p className="text-xs text-[#8a6b52] mt-0.5">
+                    This card updates live with your selected theme, names, photos, date, and location.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadCard}
+                  className="px-5 py-2.5 bg-[#8a4b3b] hover:bg-[#6e392b] text-white text-xs font-semibold uppercase tracking-wider rounded-xl shadow transition-all flex items-center gap-2 self-stretch sm:self-auto justify-center cursor-pointer"
+                >
+                  <span>📥 Download Card</span>
+                </button>
+              </div>
+
+              <div className="py-4 bg-[#faf6f2] rounded-2xl p-4 sm:p-6 border border-[#f0e4dc] overflow-hidden w-full max-w-full flex justify-center">
+                <InvitationCard
+                  ref={cardRef}
+                  partnerOne={formData.brideName || 'Bride'}
+                  partnerTwo={formData.groomName || 'Groom'}
+                  weddingDate={formData.date}
+                  location={formData.location || 'Venue / Location'}
+                  type={formData.type}
+                  imageOneUrl={brideImage ? URL.createObjectURL(brideImage) : (existingImages.bride ? `/api/download?url=${encodeURIComponent(existingImages.bride)}` : null)}
+                  imageTwoUrl={groomImage ? URL.createObjectURL(groomImage) : (existingImages.groom ? `/api/download?url=${encodeURIComponent(existingImages.groom)}` : null)}
+                  themeKey={formData.theme}
+                />
+              </div>
+            </div>
+
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="flex items-center gap-3 text-[#8a4b3b]">
                 <h3 className="font-serif text-lg italic">Choose Invitation Animation</h3>
