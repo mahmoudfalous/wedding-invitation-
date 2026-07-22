@@ -17,7 +17,7 @@ export interface InvitationCardProps {
   className?: string;
 }
 
-export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
+export const InvitationCard = React.memo(forwardRef<HTMLDivElement, InvitationCardProps>(({
   partnerOne,
   partnerTwo,
   weddingDate,
@@ -156,7 +156,7 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
                   src={imageOneUrl}
                   alt={displayPartnerOne}
                   className="w-full h-full object-cover rounded-full"
-                  crossOrigin="anonymous"
+                  crossOrigin={imageOneUrl.startsWith('http') ? 'anonymous' : undefined}
                 />
               </div>
             )}
@@ -167,7 +167,7 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
                   src={imageTwoUrl}
                   alt={displayPartnerTwo}
                   className="w-full h-full object-cover rounded-full"
-                  crossOrigin="anonymous"
+                  crossOrigin={imageTwoUrl.startsWith('http') ? 'anonymous' : undefined}
                 />
               </div>
             )}
@@ -212,7 +212,7 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
       </div>
     </div>
   );
-});
+}));
 
 InvitationCard.displayName = 'InvitationCard';
 

@@ -1,7 +1,7 @@
 // app/create/page.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion'; // Added Framer Motion
 import { WEDDING_THEMES } from "@/app/constants/themes";
@@ -82,6 +82,28 @@ export default function CreateWedding() {
   const [savedInvitations, setSavedInvitations] = useState<any[]>([]);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState({ bride: '', groom: '' });
+
+  const bridePreviewUrl = useMemo(() => {
+    if (brideImage) return URL.createObjectURL(brideImage);
+    return existingImages.bride || null;
+  }, [brideImage, existingImages.bride]);
+
+  const groomPreviewUrl = useMemo(() => {
+    if (groomImage) return URL.createObjectURL(groomImage);
+    return existingImages.groom || null;
+  }, [groomImage, existingImages.groom]);
+
+  const brideCardImageUrl = useMemo(() => {
+    if (brideImage) return URL.createObjectURL(brideImage);
+    if (existingImages.bride) return `/api/download?url=${encodeURIComponent(existingImages.bride)}`;
+    return null;
+  }, [brideImage, existingImages.bride]);
+
+  const groomCardImageUrl = useMemo(() => {
+    if (groomImage) return URL.createObjectURL(groomImage);
+    if (existingImages.groom) return `/api/download?url=${encodeURIComponent(existingImages.groom)}`;
+    return null;
+  }, [groomImage, existingImages.groom]);
 
   useEffect(() => {
     const currentDate = new Date().toISOString().split('T')[0];
@@ -589,8 +611,8 @@ export default function CreateWedding() {
                   weddingDate={formData.date}
                   location={formData.location || 'Venue / Location'}
                   type={formData.type}
-                  imageOneUrl={brideImage ? URL.createObjectURL(brideImage) : (existingImages.bride ? `/api/download?url=${encodeURIComponent(existingImages.bride)}` : null)}
-                  imageTwoUrl={groomImage ? URL.createObjectURL(groomImage) : (existingImages.groom ? `/api/download?url=${encodeURIComponent(existingImages.groom)}` : null)}
+                  imageOneUrl={brideCardImageUrl}
+                  imageTwoUrl={groomCardImageUrl}
                   themeKey={formData.theme}
                   lang={/[\u0600-\u06FF]/.test(`${formData.brideName} ${formData.groomName} ${formData.location}`) ? 'ar' : 'en'}
                 />
@@ -714,16 +736,21 @@ export default function CreateWedding() {
               <div className="grid grid-cols-2 gap-4">
                 <div className={`p-4 border-2 border-dashed rounded-3xl transition-all text-center ${(brideImage || existingImages.bride) ? 'border-[#e4a6a1] bg-pink-50/30' : 'border-[#f0e4dc]'}`}>
                   <label className="cursor-pointer block relative">
-                    {(brideImage || existingImages.bride) && (
+                    {bridePreviewUrl && (
                       <div className="w-full aspect-square rounded-2xl overflow-hidden mb-3 border border-pink-100/50 shadow-sm relative group">
-                        <img src={brideImage ? URL.createObjectURL(brideImage) : existingImages.bride} alt="Bride" className="w-full h-full object-cover" />
+                        <img src={bridePreviewUrl} alt="Bride" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="text-white text-xs font-bold uppercase tracking-wider">Change</span>
                         </div>
                       </div>
                     )}
                     <p className="text-[10px] font-bold uppercase mb-2 text-[#8a6b52]">{brideImage ? '✓ Bride Selected' : existingImages.bride ? '✓ Existing Image' : 'Upload Bride'}</p>
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onClick={(e: any) => { e.target.value = null; }}
+                      onChange={(e) => {
                       const file = e.target.files ? e.target.files[0] : null;
                       if (file && file.size > 5 * 1024 * 1024) {
                         alert('Image size should be max 5 MB');
@@ -737,16 +764,21 @@ export default function CreateWedding() {
                 </div>
                 <div className={`p-4 border-2 border-dashed rounded-3xl transition-all text-center ${(groomImage || existingImages.groom) ? 'border-[#e4a6a1] bg-pink-50/30' : 'border-[#f0e4dc]'}`}>
                   <label className="cursor-pointer block relative">
-                    {(groomImage || existingImages.groom) && (
+                    {groomPreviewUrl && (
                       <div className="w-full aspect-square rounded-2xl overflow-hidden mb-3 border border-pink-100/50 shadow-sm relative group">
-                        <img src={groomImage ? URL.createObjectURL(groomImage) : existingImages.groom} alt="Groom" className="w-full h-full object-cover" />
+                        <img src={groomPreviewUrl} alt="Groom" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="text-white text-xs font-bold uppercase tracking-wider">Change</span>
                         </div>
                       </div>
                     )}
                     <p className="text-[10px] font-bold uppercase mb-2 text-[#8a6b52]">{groomImage ? '✓ Groom Selected' : existingImages.groom ? '✓ Existing Image' : 'Upload Groom'}</p>
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onClick={(e: any) => { e.target.value = null; }}
+                      onChange={(e) => {
                       const file = e.target.files ? e.target.files[0] : null;
                       if (file && file.size > 5 * 1024 * 1024) {
                         alert('Image size should be max 5 MB');
