@@ -81,8 +81,8 @@ export const InvitationCard = React.memo(forwardRef<HTMLDivElement, InvitationCa
       ref={ref}
       id="invitation-card-export"
       dir={dir}
-      className={`relative w-full max-w-full sm:max-w-[500px] mx-auto overflow-hidden rounded-3xl border-2 shadow-2xl p-6 sm:p-10 flex flex-col justify-between items-center text-center transition-all ${theme.bg} ${theme.text} ${theme.border} ${className}`}
-      style={{ aspectRatio: '3/4.6', minHeight: '640px' }}
+      className={`relative w-full max-w-full sm:max-w-[480px] mx-auto overflow-hidden rounded-3xl border-2 shadow-2xl p-6 sm:p-8 flex flex-col justify-between items-center text-center transition-all ${theme.bg} ${theme.text} ${theme.border} ${className}`}
+      style={{ minHeight: hasImages ? '580px' : '440px' }}
     >
       {/* Outer Luxury Double Frame */}
       <div className={`absolute inset-3 rounded-2xl border ${theme.border} opacity-40 pointer-events-none`} />
