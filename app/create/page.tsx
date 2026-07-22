@@ -592,6 +592,7 @@ export default function CreateWedding() {
                   imageOneUrl={brideImage ? URL.createObjectURL(brideImage) : (existingImages.bride ? `/api/download?url=${encodeURIComponent(existingImages.bride)}` : null)}
                   imageTwoUrl={groomImage ? URL.createObjectURL(groomImage) : (existingImages.groom ? `/api/download?url=${encodeURIComponent(existingImages.groom)}` : null)}
                   themeKey={formData.theme}
+                  lang={/[\u0600-\u06FF]/.test(`${formData.brideName} ${formData.groomName} ${formData.location}`) ? 'ar' : 'en'}
                 />
               </div>
             </div>

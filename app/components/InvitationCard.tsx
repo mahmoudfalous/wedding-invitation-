@@ -13,6 +13,7 @@ export interface InvitationCardProps {
   imageOneUrl?: string | null;
   imageTwoUrl?: string | null;
   themeKey?: string;
+  lang?: 'en' | 'ar';
   className?: string;
 }
 
@@ -26,17 +27,30 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
   imageOneUrl,
   imageTwoUrl,
   themeKey = 'minimal',
+  lang,
   className = '',
 }, ref) => {
   const cleanThemeKey = (themeKey || 'minimal').split(':')[0];
   const theme: ThemeConfig = WEDDING_THEMES[cleanThemeKey] || WEDDING_THEMES.minimal;
 
+  // Auto detect Arabic in any text field
+  const isArabicPartnerOne = /[\u0600-\u06FF]/.test(partnerOne || '');
+  const isArabicPartnerTwo = /[\u0600-\u06FF]/.test(partnerTwo || '');
+  const isArabicLocation = /[\u0600-\u06FF]/.test(location || '');
+  const hasArabicChar = isArabicPartnerOne || isArabicPartnerTwo || isArabicLocation;
+  
+  const isAr = lang ? lang === 'ar' : hasArabicChar;
+  const dir: 'ltr' | 'rtl' = isAr ? 'rtl' : 'ltr';
+
+  const fontTitleClass = isAr ? 'font-cairo font-bold tracking-normal' : theme.fontTitle;
+  const fontBodyClass = isAr ? 'font-tajawal tracking-normal' : theme.fontBody;
+
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'Special Day';
+    if (!dateString) return isAr ? 'اليوم المميز' : 'Special Day';
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleDateString('en-US', {
+      return date.toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -50,10 +64,23 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
   const isEngagement = type === 'engagement';
   const hasImages = Boolean(imageOneUrl || imageTwoUrl);
 
+  const displayPartnerOne = partnerOne === 'Bride' && isAr
+    ? 'العروس'
+    : (partnerOne || (isAr ? 'العروس' : 'Bride'));
+
+  const displayPartnerTwo = partnerTwo === 'Groom' && isAr
+    ? 'العريس'
+    : (partnerTwo || (isAr ? 'العريس' : 'Groom'));
+
+  const displayLocation = location === 'Venue / Location' && isAr
+    ? 'الموقع والمكان'
+    : location;
+
   return (
     <div
       ref={ref}
       id="invitation-card-export"
+      dir={dir}
       className={`relative w-full max-w-full sm:max-w-[500px] mx-auto overflow-hidden rounded-3xl border-2 shadow-2xl p-6 sm:p-10 flex flex-col justify-between items-center text-center transition-all ${theme.bg} ${theme.text} ${theme.border} ${className}`}
       style={{ aspectRatio: '3/4.6', minHeight: '640px' }}
     >
@@ -74,11 +101,15 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
 
       {/* Card Header Section */}
       <div className="z-10 mt-3 flex flex-col items-center gap-1.5 w-full">
-        <span className={`text-[10px] sm:text-[11px] tracking-[0.35em] uppercase font-medium ${theme.accent}`}>
-          {isEngagement ? 'TOGETHER WITH THEIR FAMILIES' : 'PLEASE JOIN US TO CELEBRATE'}
+        <span className={`text-[10px] sm:text-[11px] ${isAr ? 'font-tajawal font-semibold tracking-normal' : 'tracking-[0.35em] uppercase'} ${theme.accent}`}>
+          {isAr
+            ? (isEngagement ? 'يسرنا دعوتكم لمشاركتنا فرحتنا' : 'يتشرفون بدعوة سيادتكم لحضور')
+            : (isEngagement ? 'TOGETHER WITH THEIR FAMILIES' : 'PLEASE JOIN US TO CELEBRATE')}
         </span>
-        <h3 className={`text-xs sm:text-sm tracking-[0.3em] uppercase font-light opacity-90 ${theme.fontBody}`}>
-          {isEngagement ? 'THE ENGAGEMENT OF' : 'THE WEDDING OF'}
+        <h3 className={`text-xs sm:text-sm ${isAr ? 'font-cairo font-bold tracking-normal' : 'tracking-[0.3em] uppercase font-light'} opacity-90 ${fontBodyClass}`}>
+          {isAr
+            ? (isEngagement ? 'حفل خطوبة' : 'حفل زفاف')
+            : (isEngagement ? 'THE ENGAGEMENT OF' : 'THE WEDDING OF')}
         </h3>
         <div className="flex items-center gap-2 my-1 opacity-40">
           <span className={`w-8 h-[1px] ${theme.border} bg-current`} />
@@ -89,18 +120,30 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
 
       {/* Couple Names Section */}
       <div className="z-10 my-auto flex flex-col items-center justify-center w-full px-2">
-        <h1 className={`text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight font-serif ${theme.fontTitle}`}>
-          {partnerOne || 'Bride'}
+        <h1
+          dir="auto"
+          className={`text-3xl sm:text-4xl md:text-5xl leading-tight py-1 ${
+            isArabicPartnerOne ? 'font-cairo font-bold tracking-normal' : fontTitleClass
+          }`}
+        >
+          {displayPartnerOne}
         </h1>
         
         <div className="my-3 flex items-center justify-center gap-4">
           <span className={`w-10 h-[1px] ${theme.border} bg-current opacity-30`} />
-          <span className={`text-xl sm:text-2xl font-serif italic ${theme.accent}`}>&</span>
+          <span className={`text-xl sm:text-2xl ${isAr ? 'font-cairo font-bold' : 'font-serif italic'} ${theme.accent}`}>
+            {isAr ? 'و' : '&'}
+          </span>
           <span className={`w-10 h-[1px] ${theme.border} bg-current opacity-30`} />
         </div>
 
-        <h1 className={`text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight font-serif ${theme.fontTitle}`}>
-          {partnerTwo || 'Groom'}
+        <h1
+          dir="auto"
+          className={`text-3xl sm:text-4xl md:text-5xl leading-tight py-1 ${
+            isArabicPartnerTwo ? 'font-cairo font-bold tracking-normal' : fontTitleClass
+          }`}
+        >
+          {displayPartnerTwo}
         </h1>
 
         {/* Attached Photos Gallery */}
@@ -111,7 +154,7 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
                 {/* eslint-disable-next-html-element-suppress */}
                 <img
                   src={imageOneUrl}
-                  alt={partnerOne}
+                  alt={displayPartnerOne}
                   className="w-full h-full object-cover rounded-full"
                   crossOrigin="anonymous"
                 />
@@ -122,7 +165,7 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
                 {/* eslint-disable-next-html-element-suppress */}
                 <img
                   src={imageTwoUrl}
-                  alt={partnerTwo}
+                  alt={displayPartnerTwo}
                   className="w-full h-full object-cover rounded-full"
                   crossOrigin="anonymous"
                 />
@@ -135,36 +178,36 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(({
       {/* Date, Time & Location Footer Details */}
       <div className={`z-10 mb-2 w-full pt-5 border-t opacity-95 ${theme.border} flex flex-col items-center gap-2`}>
         {/* Date */}
-        <div className={`text-sm sm:text-base tracking-[0.15em] uppercase font-medium ${theme.fontBody}`}>
+        <div className={`text-sm sm:text-base ${isAr ? 'font-tajawal font-bold tracking-normal' : 'tracking-[0.15em] uppercase font-medium'} ${fontBodyClass}`}>
           {formatDate(weddingDate)}
         </div>
 
-        {/* Time - Clean 8:00 PM without emojis */}
-        <div className="flex items-center justify-center gap-3 text-xs sm:text-sm tracking-[0.25em] font-semibold uppercase">
-          <span className={`px-4 py-1 rounded-full border ${theme.border} ${theme.cardBg} ${theme.accent} shadow-sm`}>
-            8:00 PM
+        {/* Time - 8:00 PM / 8:00 مساءً */}
+        <div className="flex items-center justify-center gap-3 text-xs sm:text-sm font-semibold tracking-wide uppercase">
+          <span className={`px-4 py-1 rounded-full border ${theme.border} ${theme.cardBg} ${theme.accent} shadow-sm ${isAr ? 'font-tajawal' : ''}`}>
+            {isAr ? '8:00 مساءً' : '8:00 PM'}
           </span>
         </div>
 
         {/* Venue / Location */}
-        {location && (
-          <div className="mt-2 flex flex-col items-center space-y-0.5">
-            <span className={`text-[10px] uppercase tracking-[0.3em] opacity-80 ${theme.accent}`}>
-              LOCATION & VENUE
+        {displayLocation && (
+          <div className="mt-2 flex flex-col items-center space-y-0.5" dir="auto">
+            <span className={`text-[10px] opacity-80 ${isAr ? 'font-tajawal font-bold tracking-normal' : 'uppercase tracking-[0.3em]'} ${theme.accent}`}>
+              {isAr ? 'المكان والموقع' : 'LOCATION & VENUE'}
             </span>
-            <span className={`text-sm sm:text-base font-serif font-medium ${theme.fontBody}`}>
-              {location}
+            <span className={`text-sm sm:text-base font-medium ${isArabicLocation ? 'font-tajawal font-bold' : fontBodyClass}`}>
+              {displayLocation}
             </span>
             {locationDetails && (
-              <span className="text-xs opacity-75 max-w-[300px] line-clamp-1">
+              <span className={`text-xs opacity-75 max-w-[300px] line-clamp-1 ${fontBodyClass}`}>
                 {locationDetails}
               </span>
             )}
           </div>
         )}
 
-        <div className={`text-[9px] tracking-[0.3em] uppercase opacity-40 mt-4 ${theme.fontBody}`}>
-          FOREVER INVITES • SAVE THE DATE
+        <div className={`text-[9px] opacity-40 mt-4 ${isAr ? 'font-tajawal tracking-normal font-medium' : 'tracking-[0.3em] uppercase'} ${fontBodyClass}`}>
+          {isAr ? 'فورايفر إنفايتس • احفظ التاريخ' : 'FOREVER INVITES • SAVE THE DATE'}
         </div>
       </div>
     </div>
